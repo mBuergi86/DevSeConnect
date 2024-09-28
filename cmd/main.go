@@ -1,13 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"log"
-	"net/http"
-	"os"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/mBuergi86/devseconnect/internal/infrastructure/database"
+	"github.com/mBuergi86/devseconnect/internal/infrastructure/routing"
 )
 
 func main() {
@@ -16,21 +15,14 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	connStr := "user=postgres dbname=users sslmode=disable"
-
-	db, err := sql.Open("postgres", connStr)
+	db, err := database.ConnectToDB()
 	if err != nil {
-		log.Fatalf("Error opening database: %q", err)
+		log.Fatalf("Failed to connect to the database of %v", err)
+		return
 	}
-
 	defer db.Close()
 
-	if len(os.Args) > 1 && os.Args[1] == "seed" {
-	}
-
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
+	routing.SetupRouting(e, db)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

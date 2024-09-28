@@ -9,7 +9,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
+    full_name VARCHAR(100) GENERATED ALWAYS AS (first_name || ' ' || last_name) STORED,
     bio TEXT,
     profile_picture VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
@@ -20,7 +20,7 @@ CREATE TABLE users (
 -- Posts Table
 CREATE TABLE posts (
     post_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(user_id),
+    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     media_type VARCHAR(50),
@@ -33,8 +33,8 @@ CREATE TABLE posts (
 -- Comments Table
 CREATE TABLE comments (
     comment_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    post_id UUID REFERENCES posts(post_id),
-    user_id UUID REFERENCES users(user_id),
+    post_id UUID REFERENCES posts(post_id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -51,17 +51,17 @@ CREATE TABLE tags (
 
 -- Post Tags Table
 CREATE TABLE post_tags (
-    post_id UUID REFERENCES posts(post_id),
-    tag_id UUID REFERENCES tags(tag_id),
+    post_id UUID REFERENCES posts(post_id) ON DELETE CASCADE,
+    tag_id UUID REFERENCES tags(tag_id) ON DELETE CASCADE,
     PRIMARY KEY (post_id, tag_id)
 );
 
 -- Likes Table
 CREATE TABLE likes (
     like_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    post_id UUID REFERENCES posts(post_id),
-    comment_id UUID REFERENCES comments(comment_id),
-    user_id UUID REFERENCES users(user_id),
+    post_id UUID REFERENCES posts(post_id) ON DELETE CASCADE,
+    comment_id UUID REFERENCES comments(comment_id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CHECK ( 
       (post_id IS NOT NULL AND comment_id IS NULL) OR 
@@ -72,15 +72,15 @@ CREATE TABLE likes (
 -- Network Table
 CREATE TABLE network (
     network_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id1 UUID REFERENCES users(user_id),
-    user_id2 UUID REFERENCES users(user_id),
+    user_id1 UUID REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id2 UUID REFERENCES users(user_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- User Connections Table
 CREATE TABLE user_connections (
-    follower_id UUID REFERENCES users(user_id),
-    followed_id UUID REFERENCES users(user_id),
+    follower_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+    followed_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -90,8 +90,8 @@ CREATE TABLE user_connections (
 -- Messages Table
 CREATE TABLE messages (
     message_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sender_id UUID REFERENCES users(user_id),
-    receiver_id UUID REFERENCES users(user_id),
+    sender_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+    receiver_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
