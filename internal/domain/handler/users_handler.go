@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	service "github.com/mBuergi86/devseconnect/internal/application"
 	"github.com/mBuergi86/devseconnect/internal/domain/entity"
 	"github.com/mBuergi86/devseconnect/pkg/response"

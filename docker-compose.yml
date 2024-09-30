@@ -14,6 +14,19 @@ services:
     networks:
       - backend
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: markus.buergi1986@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin1234
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
   postgres-exporter:
     image: wrouesnel/postgres_exporter:latest
     environment:
@@ -56,6 +69,17 @@ services:
       RABBITMQ_DEFAULT_PASS: admin1234
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - backend
+
+  rabbitmq-exporter:
+    image: kbudde/rabbitmq-exporter:latest
+    environment:
+      RABBIT_URL: http://devseconnect:admin1234@rabbitmq:15672
+    depends_on:
+      - rabbitmq
+    ports:
+      - "9419:9419"
     networks:
       - backend
 

@@ -1,9 +1,9 @@
-package routing
+package infrastructure
 
 import (
 	"database/sql"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	service "github.com/mBuergi86/devseconnect/internal/application"
 	"github.com/mBuergi86/devseconnect/internal/domain/handler"
 	"github.com/mBuergi86/devseconnect/internal/domain/repository"

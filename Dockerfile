@@ -19,7 +19,7 @@ RUN go mod download && go mod verify
 COPY . .
 
 # Build the Go application
-RUN go build -v -o devseconnect ./main.go
+RUN go build -v -o devseconnect ./cmd/main.go
 
 # Second stage: Create a minimal image for running the Go binary
 FROM alpine:latest
