@@ -95,6 +95,7 @@ CREATE TABLE messages (
     content TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    CHECK (sender_id <> receiver_id)
 );
 
 -- Create basic indexes
