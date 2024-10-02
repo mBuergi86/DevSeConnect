@@ -1,11 +1,6 @@
 # First stage: Build the Go binary
 FROM golang:1.23.1-alpine AS builder
 
-# Set environment variables
-ENV GO111MODULE=on
-ENV CGO_ENABLED=0
-ENV GOOS=linux
-
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -19,19 +14,16 @@ RUN go mod download && go mod verify
 COPY . .
 
 # Build the Go application
-RUN go build -v -o devseconnect ./cmd/main.go
+RUN go build -v -o main ./cmd/main.go
 
 # Second stage: Create a minimal image for running the Go binary
 FROM alpine:latest
 
 # Set the working directory inside the container
-WORKDIR /root/
+WORKDIR /app
 
 # Copy the compiled Go binary from the builder stage
-COPY --from=builder /app/devseconnect .
-
-# Set environment variables
-ENV RABBITMQ_CONNECTION_URL=amqp://devseconnect:admin1234@rabbitmq:5672/
+COPY --from=builder /app/main .
 
 # Command to run the binary
-CMD ["./devseconnect"]
+CMD ["./main"]
