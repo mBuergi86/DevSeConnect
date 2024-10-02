@@ -13,6 +13,7 @@ type Post struct {
 	Content   string    `db:"content" json:"content"`
 	MediaType string    `db:"media_type" json:"media_type"`
 	MediaURL  string    `db:"media_url" json:"media_url"`
+	IsDeleted bool      `db:"is_deleted" json:"is_deleted"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
@@ -25,6 +26,7 @@ func NewPost(userID uuid.UUID, title, content, mediaType, mediaURL string) *Post
 		Content:   content,
 		MediaType: mediaType,
 		MediaURL:  mediaURL,
+		IsDeleted: false,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
