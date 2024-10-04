@@ -8,39 +8,38 @@ import (
 	"github.com/mBuergi86/devseconnect/internal/domain/repository"
 )
 
-type UserConsumer struct {
+type PostConsumer struct {
 	consumer *Consumer
-	repo     repository.UserRepository
+	repo     repository.PostRepository
 }
 
-func NewUserConsumer(consumer *Consumer, repo repository.UserRepository) *UserConsumer {
-	return &UserConsumer{
+func NewPostConsumer(consumer *Consumer, repo repository.PostRepository) *PostConsumer {
+	return &PostConsumer{
 		consumer: consumer,
 		repo:     repo,
 	}
 }
 
-func (uc *UserConsumer) Start() error {
-	return uc.consumer.ConsumeMessages(uc.handleMessage)
+func (pc *PostConsumer) Start() error {
+	return pc.consumer.ConsumeMessages(pc.handleMessage)
 }
 
-func (uc *UserConsumer) handleMessage(body []byte) error {
+func (pc *PostConsumer) handleMessage(body []byte) error {
 	var message struct {
 		Action string      `json:"action"`
-		Data   entity.User `json:"data"`
+		Data   entity.Post `json:"data"`
 	}
-
 	if err := json.Unmarshal(body, &message); err != nil {
 		return err
 	}
 
 	switch message.Action {
 	case "create":
-		return uc.repo.Create(&message.Data)
+		return pc.repo.Create(&message.Data, message.Data.User.Username)
 	case "update":
-		return uc.repo.Update(&message.Data)
+		return pc.repo.Update(&message.Data)
 	case "delete":
-		return uc.repo.Delete(message.Data.UserID)
+		return pc.repo.Delete(message.Data.PostID)
 	default:
 		return fmt.Errorf("unknown action: %s", message.Action)
 	}

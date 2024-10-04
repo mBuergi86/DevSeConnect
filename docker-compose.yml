@@ -1,12 +1,11 @@
-version: "3"
 services:
   postgres:
     image: postgres:latest
     container_name: postgres
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: devseconnect
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -17,9 +16,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: markus.buergi1986@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: admin1234
+    env_file:
+      - .env
     ports:
       - "8081:80"
     depends_on:
@@ -32,7 +30,7 @@ services:
   postgres-exporter:
     image: wrouesnel/postgres_exporter:latest
     environment:
-      DATA_SOURCE_NAME: "postgresql://admin:admin@postgres:5432/devseconnect?sslmode=disable"
+      DATA_SOURCE_NAME: ${DATA_SOURCE_NAME}
     depends_on:
       - postgres
     ports:
@@ -66,9 +64,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672" # RabbitMQ management console
-    environment:
-      RABBITMQ_DEFAULT_USER: devseconnect
-      RABBITMQ_DEFAULT_PASS: admin1234
+    env_file:
+      - .env
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
@@ -76,10 +73,8 @@ services:
 
   rabbitmq-exporter:
     image: kbudde/rabbitmq-exporter:latest
-    environment:
-      RABBIT_URL: http://rabbitmq:15672
-      RABBIT_USER: devseconnect
-      RABBIT_PASSWORD: admin1234
+    env_file:
+      - .env
     depends_on:
       - rabbitmq
     ports:
@@ -109,6 +104,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
     container_name: golang_web_server
     ports:
       - "1323:1323"

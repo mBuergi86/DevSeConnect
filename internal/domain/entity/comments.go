@@ -7,13 +7,16 @@ import (
 )
 
 type Comments struct {
-	CommentID uuid.UUID `db:"comment_id" json:"comment_id"`
-	PostID    uuid.UUID `db:"post_id" json:"post_id"`
-	UserID    uuid.UUID `db:"user_id" json:"user_id"`
-	Content   string    `db:"content" json:"content"`
-	IsDeleted bool      `db:"is_deleted" json:"is_deleted"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	CommentID uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()" json:"comment_id"`
+	PostID    uuid.UUID `gorm:"type:uuid;not null" json:"post_id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+	Content   string    `gorm:"type:text;not null" json:"content"`
+	IsDeleted bool      `gorm:"default:false" json:"is_deleted"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+
+	Post *Post `gorm:"foreignKey:PostID;references:PostID" json:"post"`
+	User *User `gorm:"foreignKey:UserID;references:UserID" json:"user"`
 }
 
 func NewComment(postID, userID uuid.UUID, content string) *Comments {

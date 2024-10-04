@@ -7,21 +7,22 @@ import (
 )
 
 type Post struct {
-	PostID    uuid.UUID `db:"post_id" json:"post_id"`
-	UserID    uuid.UUID `db:"user_id" json:"user_id"`
-	Title     string    `db:"title" json:"title"`
-	Content   string    `db:"content" json:"content"`
-	MediaType string    `db:"media_type" json:"media_type"`
-	MediaURL  string    `db:"media_url" json:"media_url"`
-	IsDeleted bool      `db:"is_deleted" json:"is_deleted"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	PostID    uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"post_id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+	Title     string    `gorm:"size:255;not null" json:"title"`
+	Content   string    `gorm:"type:text;not null" json:"content"`
+	MediaType string    `gorm:"size:50" json:"media_type"`
+	MediaURL  string    `gorm:"size:255" json:"media_url"`
+	IsDeleted bool      `gorm:"default:false" json:"is_deleted"`
+	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	// Remove the User relation if it's not needed
+	// User      User      `gorm:"foreignKey:UserID" json:"-"`
+	User *User `gorm:"foreignKey:UserID;references:UserID" json:"user"`
 }
 
 func NewPost(userID uuid.UUID, title, content, mediaType, mediaURL string) *Post {
 	return &Post{
-		PostID:    uuid.New(),
-		UserID:    userID,
 		Title:     title,
 		Content:   content,
 		MediaType: mediaType,

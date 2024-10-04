@@ -1,52 +1,38 @@
 package messaging
 
 import (
-	"encoding/json"
 	"log"
 
-	"github.com/mBuergi86/devseconnect/internal/domain/entity"
-	"github.com/mBuergi86/devseconnect/internal/domain/repository"
 	"github.com/rabbitmq/amqp091-go"
 )
 
 type Consumer struct {
-	conn     *amqp091.Connection
-	channel  *amqp091.Channel
-	userRepo repository.UserRepository
+	conn      *amqp091.Connection
+	channel   *amqp091.Channel
+	queueName string
 }
 
-func NewConsumer(conn *amqp091.Connection, userRepo repository.UserRepository) (*Consumer, error) {
-	channel, err := conn.Channel()
+func NewConsumer(conn *amqp091.Connection, queueName string) (*Consumer, error) {
+	ch, err := conn.Channel()
 	if err != nil {
 		return nil, err
 	}
 
 	return &Consumer{
-		conn:     conn,
-		channel:  channel,
-		userRepo: userRepo,
+		conn:      conn,
+		channel:   ch,
+		queueName: queueName,
 	}, nil
 }
 
-func (c *Consumer) Start() error {
+func (c *Consumer) ConsumeMessages(handler func([]byte) error) error {
 	q, err := c.channel.QueueDeclare(
-		"user_queue", // name
-		true,         // durable
-		false,        // delete when unused
-		false,        // exclusive
-		false,        // no-wait
-		nil,          // arguments
-	)
-	if err != nil {
-		return err
-	}
-
-	err = c.channel.QueueBind(
-		q.Name,        // queue name
-		"user_queue",  // routing key
-		"user_events", // exchange
-		false,
-		nil,
+		c.queueName, // name
+		true,        // durable
+		false,       // delete when unused
+		false,       // exclusive
+		false,       // no-wait
+		nil,         // arguments
 	)
 	if err != nil {
 		return err
@@ -67,42 +53,15 @@ func (c *Consumer) Start() error {
 
 	go func() {
 		for d := range msgs {
-			var event map[string]interface{}
-			if err := json.Unmarshal(d.Body, &event); err != nil {
-				log.Printf("Error unmarshaling event: %v", err)
-				d.Nack(false, false)
-				continue
+			if err := handler(d.Body); err != nil {
+				log.Printf("Error handling message: %v", err)
+				d.Nack(false, true) // negative acknowledge, requeue the message
+			} else {
+				d.Ack(false) // acknowledge the message
 			}
-
-			eventType, _ := event["type"].(string)
-			userData, _ := event["user"].(map[string]interface{})
-
-			var user entity.User
-			userJSON, _ := json.Marshal(userData)
-			if err := json.Unmarshal(userJSON, &user); err != nil {
-				log.Printf("Error unmarshaling user data: %v", err)
-				d.Nack(false, false)
-				continue
-			}
-
-			switch eventType {
-			case "user_created":
-				log.Printf("Processing user_created event for user %s", user.UserID)
-				// Handle user creation event
-			case "user_updated":
-				log.Printf("Processing user_updated event for user %s", user.UserID)
-				// Handle user update event
-			case "user_deleted":
-				log.Printf("Processing user_deleted event for user %s", user.UserID)
-				// Handle user deletion event
-			default:
-				log.Printf("Unknown event type: %s", eventType)
-			}
-
-			d.Ack(false)
 		}
 	}()
 
-	log.Printf("RabbitMQ Consumer started. Waiting for messages...")
+	log.Printf("Consumer started for queue: %s", c.queueName)
 	return nil
 }

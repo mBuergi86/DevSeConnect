@@ -20,6 +20,10 @@ type UserService struct {
 }
 
 func NewUserService(userRepo repository.UserRepository, rabbitMQChan *amqp091.Channel) (*UserService, error) {
+	if userRepo == nil {
+		return nil, errors.New("user repository is required")
+	}
+
 	_, err := rabbitMQChan.QueueDeclare(
 		"user_queue", // name
 		true,         // durable
@@ -109,6 +113,10 @@ func (s *UserService) Login(email, password string) (*entity.User, error) {
 
 func (s *UserService) GetUserByID(id uuid.UUID) (*entity.User, error) {
 	return s.userRepo.FindByID(id)
+}
+
+func (s *UserService) GetUserByUsername(username string) (*entity.User, error) {
+	return s.userRepo.FindByUsername(username)
 }
 
 func (s *UserService) UpdateUser(updateData map[string]interface{}) (*entity.User, error) {
