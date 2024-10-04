@@ -70,6 +70,7 @@ func main() {
 	userRepo := repository.NewUserRepository(db, redisClient)
 	postRepo := repository.NewPostRepository(db)
 	commentRepo := repository.NewCommentRepository(db)
+	tagRepo := repository.NewTagsRepository(db)
 
 	// Setup services
 	userService, err := service.NewUserService(userRepo, rabbitMQChan)
@@ -79,6 +80,7 @@ func main() {
 
 	postService := service.NewPostService(postRepo, userRepo, rabbitMQChan)
 	commentService := service.NewCommentService(commentRepo, postRepo, userRepo, rabbitMQChan)
+	tagService := service.NewTagsService(tagRepo, rabbitMQChan)
 
 	// Setup consumer
 	userConsumer, err := messaging.NewConsumer(rabbitmqConn, "user_queue")
@@ -92,11 +94,20 @@ func main() {
 	}
 
 	commentConsumer, err := messaging.NewConsumer(rabbitmqConn, "comment_queue")
+	if err != nil {
+		log.Fatalf("Failed to create comment consumer: %v", err)
+	}
+
+	tagConsumer, err := messaging.NewConsumer(rabbitmqConn, "tag_queue")
+	if err != nil {
+		log.Fatalf("Failed to create tag consumer: %v", err)
+	}
 
 	// Start consumer
 	uc := messaging.NewUserConsumer(userConsumer, userRepo)
 	pc := messaging.NewPostConsumer(postConsumer, postRepo)
 	cc := messaging.NewCommentConsumer(commentConsumer, commentRepo)
+	tc := messaging.NewTagsConsumer(tagConsumer, tagRepo)
 
 	go func() {
 		if err := uc.Start(); err != nil {
@@ -116,8 +127,14 @@ func main() {
 		}
 	}()
 
+	go func() {
+		if err := tc.Start(); err != nil {
+			log.Fatalf("Failed to start tag consumer: %v", err)
+		}
+	}()
+
 	// Setup router
-	router := routing.SetupRouter(userService, postService, commentService)
+	router := routing.SetupRouter(userService, postService, commentService, tagService)
 
 	port := os.Getenv("PORT")
 	if port == "" {

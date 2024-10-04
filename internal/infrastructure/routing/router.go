@@ -7,7 +7,12 @@ import (
 	"github.com/mBuergi86/devseconnect/internal/domain/handler"
 )
 
-func SetupRouter(userService *service.UserService, postService *service.PostService, commentService *service.CommentService) *echo.Echo {
+func SetupRouter(
+	userService *service.UserService,
+	postService *service.PostService,
+	commentService *service.CommentService,
+	tagService *service.TagsService,
+) *echo.Echo {
 	e := echo.New()
 
 	// Middleware
@@ -18,6 +23,7 @@ func SetupRouter(userService *service.UserService, postService *service.PostServ
 	userHandler := handler.NewUserHandler(userService)
 	postHandler := handler.NewPostHandler(postService, userService)
 	commentHandler := handler.NewCommentHandler(commentService, postService, userService)
+	tagHandler := handler.NewTagHandler(tagService)
 
 	// User routes
 	e.POST("/register", userHandler.Register)
@@ -38,6 +44,11 @@ func SetupRouter(userService *service.UserService, postService *service.PostServ
 	e.POST("/comments/:title/:username", commentHandler.CreateComment)
 	e.PUT("/comments/:id", commentHandler.UpdateComment)
 	e.DELETE("/comments/:id", commentHandler.DeleteComment)
+
+	e.GET("/tags", tagHandler.GetTags)
+	e.GET("/tags/:id", tagHandler.GetTag)
+	e.POST("/tags", tagHandler.CreateTag)
+	e.DELETE("/tags/:id", tagHandler.DeleteTag)
 
 	return e
 }
