@@ -26,3 +26,9 @@ go.work.sum
 
 # git credentials file
 .git-credentials
+
+# air file
+.air.toml
+
+cmd/tmp/
+tmp/
