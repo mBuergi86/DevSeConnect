@@ -71,12 +71,12 @@ func (s *UserService) publishUserEvent(eventType string, user *entity.User) erro
 	return nil
 }
 
-func (s *UserService) Register(username, email, password, firstName, lastName, bio, profilePicture string) (*entity.User, error) {
-	existingUser, _ := s.userRepo.FindByEmail(email)
+func (s *UserService) Register(ctx context.Context, username, email, password, firstName, lastName, bio, profilePicture string) (*entity.User, error) {
+	existingUser, _ := s.userRepo.FindByEmail(ctx, email)
 	if existingUser != nil {
 		return nil, errors.New("user with this email already exists")
 	}
-	existingUser, _ = s.userRepo.FindByUsername(username)
+	existingUser, _ = s.userRepo.FindByUsername(ctx, username)
 	if existingUser != nil {
 		return nil, errors.New("user with this username already exists")
 	}
@@ -84,7 +84,7 @@ func (s *UserService) Register(username, email, password, firstName, lastName, b
 	if err != nil {
 		return nil, err
 	}
-	if err := s.userRepo.Create(user); err != nil {
+	if err := s.userRepo.Create(ctx, user); err != nil {
 		return nil, err
 	}
 	if err := s.publishUserEvent("user_registered", user); err != nil {
@@ -95,8 +95,8 @@ func (s *UserService) Register(username, email, password, firstName, lastName, b
 	return user, nil
 }
 
-func (s *UserService) Login(email, password string) (*entity.User, error) {
-	user, err := s.userRepo.FindByEmail(email)
+func (s *UserService) Login(ctx context.Context, email, password string) (*entity.User, error) {
+	user, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
@@ -111,21 +111,21 @@ func (s *UserService) Login(email, password string) (*entity.User, error) {
 	return user, nil
 }
 
-func (s *UserService) GetUserByID(id uuid.UUID) (*entity.User, error) {
-	return s.userRepo.FindByID(id)
+func (s *UserService) GetUserByID(ctx context.Context, id uuid.UUID) (*entity.User, error) {
+	return s.userRepo.FindByID(ctx, id)
 }
 
-func (s *UserService) GetUserByUsername(username string) (*entity.User, error) {
-	return s.userRepo.FindByUsername(username)
+func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*entity.User, error) {
+	return s.userRepo.FindByUsername(ctx, username)
 }
 
-func (s *UserService) UpdateUser(updateData map[string]interface{}) (*entity.User, error) {
+func (s *UserService) UpdateUser(ctx context.Context, updateData map[string]interface{}) (*entity.User, error) {
 	userID, ok := updateData["user_id"].(uuid.UUID)
 	if !ok {
 		return nil, errors.New("invalid user ID")
 	}
 
-	existingUser, err := s.userRepo.FindByID(userID)
+	existingUser, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (s *UserService) UpdateUser(updateData map[string]interface{}) (*entity.Use
 		existingUser.IsActive = isActive
 	}
 
-	if err := s.userRepo.Update(existingUser); err != nil {
+	if err := s.userRepo.Update(ctx, existingUser); err != nil {
 		return nil, err
 	}
 
@@ -166,12 +166,12 @@ func (s *UserService) UpdateUser(updateData map[string]interface{}) (*entity.Use
 	return existingUser, nil
 }
 
-func (s *UserService) DeleteUser(id uuid.UUID) error {
-	user, err := s.userRepo.FindByID(id)
+func (s *UserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	user, err := s.userRepo.FindByID(ctx, id)
 	if err != nil {
 		return err
 	}
-	if err := s.userRepo.Delete(id); err != nil {
+	if err := s.userRepo.Delete(ctx, id); err != nil {
 		return err
 	}
 	if err := s.publishUserEvent("user_deleted", user); err != nil {
@@ -182,6 +182,6 @@ func (s *UserService) DeleteUser(id uuid.UUID) error {
 	return nil
 }
 
-func (s *UserService) GetUsers() ([]*entity.User, error) {
-	return s.userRepo.FindAll()
+func (s *UserService) GetUsers(ctx context.Context) ([]*entity.User, error) {
+	return s.userRepo.FindAll(ctx)
 }

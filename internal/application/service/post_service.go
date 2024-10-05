@@ -39,14 +39,14 @@ func (s *PostService) CreatePost(ctx context.Context, post *entity.Post, usernam
 		return errors.New("Username is empty")
 	}
 
-	user, err := s.userRepo.FindByUsername(username)
+	user, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return fmt.Errorf("Failed to find user by username: %s: %w", username, err)
 	}
 
 	post.UserID = user.UserID
 
-	if err := s.postRepo.Create(post, username); err != nil {
+	if err := s.postRepo.Create(ctx, post, username); err != nil {
 		return err
 	}
 	s.publishPostEvent("post_created", post)
@@ -54,25 +54,25 @@ func (s *PostService) CreatePost(ctx context.Context, post *entity.Post, usernam
 	return nil
 }
 
-func (s *PostService) GetAllPosts() ([]*entity.Post, error) {
-	return s.postRepo.FindAll()
+func (s *PostService) GetAllPosts(ctx context.Context) ([]*entity.Post, error) {
+	return s.postRepo.FindAll(ctx)
 }
 
-func (s *PostService) GetPostByID(id uuid.UUID) (*entity.Post, error) {
-	return s.postRepo.FindByID(id)
+func (s *PostService) GetPostByID(ctx context.Context, id uuid.UUID) (*entity.Post, error) {
+	return s.postRepo.FindByID(ctx, id)
 }
 
-func (s *PostService) GetPostByTitle(title string) (*entity.Post, error) {
-	return s.postRepo.FindByTitle(title)
+func (s *PostService) GetPostByTitle(ctx context.Context, title string) (*entity.Post, error) {
+	return s.postRepo.FindByTitle(ctx, title)
 }
 
-func (s *PostService) UpdatePost(updateData map[string]interface{}) (*entity.Post, error) {
+func (s *PostService) UpdatePost(ctx context.Context, updateData map[string]interface{}) (*entity.Post, error) {
 	postID, ok := updateData["post_id"].(uuid.UUID)
 	if !ok {
 		return nil, errors.New("Invalid post ID")
 	}
 
-	existingPost, err := s.postRepo.FindByID(postID)
+	existingPost, err := s.postRepo.FindByID(ctx, postID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (s *PostService) UpdatePost(updateData map[string]interface{}) (*entity.Pos
 		existingPost.IsDeleted = isDeleted
 	}
 
-	if err := s.postRepo.Update(existingPost); err != nil {
+	if err := s.postRepo.Update(ctx, existingPost); err != nil {
 		return nil, err
 	}
 
@@ -106,8 +106,8 @@ func (s *PostService) UpdatePost(updateData map[string]interface{}) (*entity.Pos
 	return existingPost, nil
 }
 
-func (s *PostService) DeletePost(id uuid.UUID) error {
-	if err := s.postRepo.Delete(id); err != nil {
+func (s *PostService) DeletePost(ctx context.Context, id uuid.UUID) error {
+	if err := s.postRepo.Delete(ctx, id); err != nil {
 		return err
 	}
 	s.publishPostEvent("post_deleted", &entity.Post{PostID: id})

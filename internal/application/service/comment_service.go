@@ -56,7 +56,7 @@ func (s *CommentService) CreateComment(ctx context.Context, comment *entity.Comm
 	if username == "" {
 		return errors.New("Username is empty")
 	}
-	post, err := s.postRepo.FindByTitle(title)
+	post, err := s.postRepo.FindByTitle(ctx, title)
 	if err != nil {
 		return fmt.Errorf("Failed to find post by title: %s: %w", title, err)
 	}
