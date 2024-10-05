@@ -39,9 +39,7 @@ func (r *PostgresTagsRepository) FindAll(ctx context.Context) ([]*entity.Tags, e
 
 func (r *PostgresTagsRepository) FindByID(ctx context.Context, tagID uuid.UUID) (*entity.Tags, error) {
 	var tag entity.Tags
-	tx := r.DB.Begin()
-	if err := tx.Find(&tag, "tag_id = ?", tagID).Error; err != nil {
-		tx.Rollback()
+	if err := r.DB.First(&tag, "tag_id = ?", tagID).Error; err != nil {
 		return nil, err
 	}
 	return &tag, nil
@@ -49,10 +47,20 @@ func (r *PostgresTagsRepository) FindByID(ctx context.Context, tagID uuid.UUID) 
 
 func (r *PostgresTagsRepository) Create(ctx context.Context, tag *entity.Tags) error {
 	tx := r.DB.Begin()
-	return tx.Create(tag).Error
+	err := tx.Create(tag).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 func (r *PostgresTagsRepository) Delete(ctx context.Context, tagID uuid.UUID) error {
 	tx := r.DB.Begin()
-	return tx.Delete(&entity.Tags{}, tagID).Error
+	err := tx.Delete(&entity.Tags{}, tagID).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }

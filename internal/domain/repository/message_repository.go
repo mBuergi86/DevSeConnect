@@ -9,7 +9,7 @@ import (
 )
 
 type MessageRepository interface {
-	FindAll() ([]*entity.Messages, error)
+	FindAll(ctx context.Context) ([]*entity.Messages, error)
 	FindByID(ctx context.Context, messageID uuid.UUID) (*entity.Messages, error)
 	Create(ctx context.Context, message *entity.Messages, username1, username2 string) error
 	Update(ctx context.Context, message *entity.Messages, messageID uuid.UUID) error
@@ -24,7 +24,7 @@ func NewMessageRepository(db *gorm.DB) MessageRepository {
 	return &PostgresMessageRepository{DB: db}
 }
 
-func (r *PostgresMessageRepository) FindAll() ([]*entity.Messages, error) {
+func (r *PostgresMessageRepository) FindAll(ctx context.Context) ([]*entity.Messages, error) {
 	var messages []*entity.Messages
 	if err := r.DB.Find(&messages).Error; err != nil {
 		return nil, err

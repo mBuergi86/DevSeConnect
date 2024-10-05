@@ -11,6 +11,7 @@ import (
 type CommentRepository interface {
 	FindAll() ([]*entity.Comments, error)
 	FindByID(ctx context.Context, commentID uuid.UUID) (*entity.Comments, error)
+	FindByContent(ctx context.Context, content string) (*entity.Comments, error)
 	Create(ctx context.Context, comment *entity.Comments, title, username string) error
 	Update(ctx context.Context, comment *entity.Comments, commentID uuid.UUID) error
 	Delete(ctx context.Context, commentID uuid.UUID) error
@@ -26,9 +27,7 @@ func NewCommentRepository(db *gorm.DB) CommentRepository {
 
 func (r *PostgresCommentRepository) FindAll() ([]*entity.Comments, error) {
 	var comments []*entity.Comments
-	tx := r.DB.Begin()
-	if err := tx.Find(&comments).Error; err != nil {
-		tx.Rollback()
+	if err := r.DB.Find(&comments).Error; err != nil {
 		return nil, err
 	}
 
@@ -37,9 +36,15 @@ func (r *PostgresCommentRepository) FindAll() ([]*entity.Comments, error) {
 
 func (r *PostgresCommentRepository) FindByID(ctx context.Context, commentID uuid.UUID) (*entity.Comments, error) {
 	var comment entity.Comments
-	tx := r.DB.Begin()
-	if err := tx.Find(&comment, "comment_id = ?", commentID).Error; err != nil {
-		tx.Rollback()
+	if err := r.DB.First(&comment, "comment_id = ?", commentID).Error; err != nil {
+		return nil, err
+	}
+	return &comment, nil
+}
+
+func (r *PostgresCommentRepository) FindByContent(ctx context.Context, content string) (*entity.Comments, error) {
+	var comment entity.Comments
+	if err := r.DB.First(&comment, "content = ?", content).Error; err != nil {
 		return nil, err
 	}
 	return &comment, nil

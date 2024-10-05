@@ -14,13 +14,13 @@ import (
 )
 
 type UserRepository interface {
-	FindByID(id uuid.UUID) (*entity.User, error)
-	FindByEmail(email string) (*entity.User, error)
-	FindByUsername(username string) (*entity.User, error)
-	Create(user *entity.User) error
-	Update(user *entity.User) error
-	Delete(id uuid.UUID) error
-	FindAll() ([]*entity.User, error)
+	FindByID(ctx context.Context, id uuid.UUID) (*entity.User, error)
+	FindByEmail(ctx context.Context, email string) (*entity.User, error)
+	FindByUsername(ctx context.Context, username string) (*entity.User, error)
+	Create(ctx context.Context, user *entity.User) error
+	Update(ctx context.Context, user *entity.User) error
+	Delete(ctx context.Context, id uuid.UUID) error
+	FindAll(ctx context.Context) ([]*entity.User, error)
 }
 
 type PostgresUserRepository struct {
@@ -36,7 +36,7 @@ func NewUserRepository(db *gorm.DB, redis *redis.Client) UserRepository {
 	return &PostgresUserRepository{DB: db, Redis: redis}
 }
 
-func (r *PostgresUserRepository) FindAll() ([]*entity.User, error) {
+func (r *PostgresUserRepository) FindAll(ctx context.Context) ([]*entity.User, error) {
 	var users []*entity.User
 	if err := r.DB.Find(&users).Error; err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (r *PostgresUserRepository) FindAll() ([]*entity.User, error) {
 	return users, nil
 }
 
-func (r *PostgresUserRepository) FindByID(id uuid.UUID) (*entity.User, error) {
+func (r *PostgresUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	var user entity.User
 
 	// Try to get from cache
@@ -64,7 +64,7 @@ func (r *PostgresUserRepository) FindByID(id uuid.UUID) (*entity.User, error) {
 	return &user, nil
 }
 
-func (r *PostgresUserRepository) FindByEmail(email string) (*entity.User, error) {
+func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var user entity.User
 
 	// Try to get from cache
@@ -84,7 +84,7 @@ func (r *PostgresUserRepository) FindByEmail(email string) (*entity.User, error)
 	return &user, nil
 }
 
-func (r *PostgresUserRepository) FindByUsername(username string) (*entity.User, error) {
+func (r *PostgresUserRepository) FindByUsername(ctx context.Context, username string) (*entity.User, error) {
 	var user entity.User
 
 	// Try to get from cache
@@ -104,27 +104,30 @@ func (r *PostgresUserRepository) FindByUsername(username string) (*entity.User, 
 	return &user, nil
 }
 
-func (r *PostgresUserRepository) Create(user *entity.User) error {
+func (r *PostgresUserRepository) Create(ctx context.Context, user *entity.User) error {
 	tx := r.DB.Begin()
 	if err := tx.Create(user).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 	tx.Commit()
 	return r.cacheUser(user)
 }
 
-func (r *PostgresUserRepository) Update(user *entity.User) error {
+func (r *PostgresUserRepository) Update(ctx context.Context, user *entity.User) error {
 	tx := r.DB.Begin()
 	if err := tx.Save(user).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 	tx.Commit()
 	return r.cacheUser(user)
 }
 
-func (r *PostgresUserRepository) Delete(id uuid.UUID) error {
+func (r *PostgresUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	tx := r.DB.Begin()
 	if err := tx.Delete(&entity.User{}, "user_id = ?", id).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 	tx.Commit()
@@ -168,7 +171,7 @@ func (r *PostgresUserRepository) getUserFromCache(field, value string) (*entity.
 
 func (r *PostgresUserRepository) removeUserFromCache(id uuid.UUID) error {
 	ctx := context.Background()
-	user, err := r.FindByID(id)
+	user, err := r.FindByID(ctx, id)
 	if err != nil {
 		return err
 	}
