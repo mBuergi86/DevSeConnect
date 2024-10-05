@@ -70,6 +70,8 @@ VALUES
 -- Messages
 INSERT INTO messages (sender_id, receiver_id, content)
 VALUES 
-((SELECT user_id FROM users WHERE username = 'johndoe'), (SELECT user_id FROM users WHERE username = 'janesmit'), 'Hey Jane, I loved your post about Kubernetes. Can we discuss it further?'),
+((SELECT user_id FROM users WHERE username = 'johndoe'), 
+  (SELECT user_id FROM users WHERE username = 'janesmit'), 
+  'Hey Jane, I loved your post about Kubernetes. Can we discuss it further?'),
 ((SELECT user_id FROM users WHERE username = 'janesmit'), (SELECT user_id FROM users WHERE username = 'mikebrown'), 'Mike, I have a question about your microservices post. Do you have time for a quick call?'),
 ((SELECT user_id FROM users WHERE username = 'mikebrown'), (SELECT user_id FROM users WHERE username = 'johndoe'), 'John, I''m working on a new CI/CD setup. Can I get your opinion on it?');
