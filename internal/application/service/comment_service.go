@@ -46,6 +46,10 @@ func (s *CommentService) FindCommentByID(ctx context.Context, commentID uuid.UUI
 	return s.commentRepo.FindByID(ctx, commentID)
 }
 
+func (s *CommentService) FindCommentByContent(ctx context.Context, content string) (*entity.Comments, error) {
+	return s.commentRepo.FindByContent(ctx, content)
+}
+
 func (s *CommentService) CreateComment(ctx context.Context, comment *entity.Comments, title, username string) error {
 	if comment == nil {
 		return errors.New("Comment is nil")

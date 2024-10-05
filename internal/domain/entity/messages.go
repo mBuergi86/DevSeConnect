@@ -13,6 +13,8 @@ type Messages struct {
 	Content    string    `db:"content" json:"content"`
 	IsRead     bool      `db:"is_read" json:"is_read"`
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
+	User1      string    `json:"user1"`
+	User2      string    `json:"user2"`
 }
 
 func newMessages(senderID, receiverID uuid.UUID, content string, isRead bool) *Messages {

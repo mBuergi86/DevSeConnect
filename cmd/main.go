@@ -71,6 +71,9 @@ func main() {
 	postRepo := repository.NewPostRepository(db)
 	commentRepo := repository.NewCommentRepository(db)
 	tagRepo := repository.NewTagsRepository(db)
+	postTagRepo := repository.NewPostTagsRepository(db)
+	messageRepo := repository.NewMessageRepository(db)
+	likeRepo := repository.NewLikeRepository(db)
 
 	// Setup services
 	userService, err := service.NewUserService(userRepo, rabbitMQChan)
@@ -81,6 +84,9 @@ func main() {
 	postService := service.NewPostService(postRepo, userRepo, rabbitMQChan)
 	commentService := service.NewCommentService(commentRepo, postRepo, userRepo, rabbitMQChan)
 	tagService := service.NewTagsService(tagRepo, rabbitMQChan)
+	postTagService := service.NewPostTagsService(postTagRepo, rabbitMQChan)
+	messageService := service.NewMessageService(messageRepo, userRepo, rabbitMQChan)
+	likeService := service.NewLikeService(likeRepo, postRepo, commentRepo, userRepo, rabbitMQChan)
 
 	// Setup consumer
 	userConsumer, err := messaging.NewConsumer(rabbitmqConn, "user_queue")
@@ -103,11 +109,29 @@ func main() {
 		log.Fatalf("Failed to create tag consumer: %v", err)
 	}
 
+	postTagConsumer, err := messaging.NewConsumer(rabbitmqConn, "post_tag_queue")
+	if err != nil {
+		log.Fatalf("Failed to create post tag consumer: %v", err)
+	}
+
+	messageConsumer, err := messaging.NewConsumer(rabbitmqConn, "message_queue")
+	if err != nil {
+		log.Fatalf("Failed to create message consumer: %v", err)
+	}
+
+	likeConsumer, err := messaging.NewConsumer(rabbitmqConn, "like_queue")
+	if err != nil {
+		log.Fatalf("Failed to create like consumer: %v", err)
+	}
+
 	// Start consumer
 	uc := messaging.NewUserConsumer(userConsumer, userRepo)
 	pc := messaging.NewPostConsumer(postConsumer, postRepo)
 	cc := messaging.NewCommentConsumer(commentConsumer, commentRepo)
 	tc := messaging.NewTagsConsumer(tagConsumer, tagRepo)
+	ptc := messaging.NewPostTagsConsumer(postTagConsumer, postTagRepo)
+	mc := messaging.NewMessageConsumer(messageConsumer, messageRepo)
+	lc := messaging.NewLikeConsumer(likeConsumer, likeRepo)
 
 	go func() {
 		if err := uc.Start(); err != nil {
@@ -133,8 +157,26 @@ func main() {
 		}
 	}()
 
+	go func() {
+		if err := ptc.Start(); err != nil {
+			log.Fatalf("Failed to start post tag consumer: %v", err)
+		}
+	}()
+
+	go func() {
+		if err := mc.Start(); err != nil {
+			log.Fatalf("Failed to start message consumer: %v", err)
+		}
+	}()
+
+	go func() {
+		if err := lc.Start(); err != nil {
+			log.Fatalf("Failed to start like consumer: %v", err)
+		}
+	}()
+
 	// Setup router
-	router := routing.SetupRouter(userService, postService, commentService, tagService)
+	router := routing.SetupRouter(userService, postService, commentService, tagService, postTagService, messageService, likeService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
