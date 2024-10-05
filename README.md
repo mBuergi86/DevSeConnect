@@ -1,4 +1,3 @@
-````markdown
 # DevSeConnect 🌐
 
 Welcome to **DevSeConnect** – A social media platform for developers to share knowledge and collaborate on DevOps and software development topics.
@@ -45,8 +44,6 @@ This repository contains the backend implementation of DevSeConnect, built using
 ├── go.mod                         # Go module dependencies
 ├── LICENSE                        # License file
 ```
-````
-
 ## Technologies Used 🛠️
 
 - **Go (Golang)**
@@ -139,7 +136,3 @@ Asynchronous communication between services is managed via **RabbitMQ**. Produce
 ## License 📜
 
 This project is licensed under the [MIT License](./LICENSE).
-
-```
-
-```
