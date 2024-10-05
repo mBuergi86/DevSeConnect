@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -31,7 +32,7 @@ func (h *UserHandler) Register(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
 
-	user, err := h.userService.Register(input.Username, input.Email, input.Password, input.FirstName, input.LastName, input.Bio, input.ProfilePicture)
+	user, err := h.userService.Register(c.Request().Context(), input.Username, input.Email, input.Password, input.FirstName, input.LastName, input.Bio, input.ProfilePicture)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -49,7 +50,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
 
-	user, err := h.userService.Login(input.Email, input.Password)
+	user, err := h.userService.Login(c.Request().Context(), input.Email, input.Password)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid credentials"})
 	}
@@ -63,7 +64,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
 	}
 
-	user, err := h.userService.GetUserByID(id)
+	user, err := h.userService.GetUserByID(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 	}
@@ -85,7 +86,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 
 	updateData["user_id"] = id
 
-	updatedUser, err := h.userService.UpdateUser(updateData)
+	updatedUser, err := h.userService.UpdateUser(c.Request().Context(), updateData)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
 	}
@@ -99,7 +100,7 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
 	}
 
-	err = h.userService.DeleteUser(id)
+	err = h.userService.DeleteUser(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete user"})
 	}
@@ -108,7 +109,7 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 }
 
 func (h *UserHandler) GetUsers(c echo.Context) error {
-	users, err := h.userService.GetUsers()
+	users, err := h.userService.GetUsers(context.Background())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch users"})
 	}

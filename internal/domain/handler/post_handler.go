@@ -28,7 +28,7 @@ func (h *PostHandler) CreatePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid username"})
 	}
 
-	user, err := h.userService.GetUserByUsername(username)
+	user, err := h.userService.GetUserByUsername(c.Request().Context(), username)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get user"})
 	}
@@ -49,7 +49,7 @@ func (h *PostHandler) CreatePost(c echo.Context) error {
 }
 
 func (h *PostHandler) GetAllPosts(c echo.Context) error {
-	posts, err := h.postService.GetAllPosts()
+	posts, err := h.postService.GetAllPosts(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch posts"})
 	}
@@ -62,7 +62,7 @@ func (h *PostHandler) GetPost(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid post ID"})
 	}
-	post, err := h.postService.GetPostByID(id)
+	post, err := h.postService.GetPostByID(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 	}
@@ -83,7 +83,7 @@ func (h *PostHandler) UpdatePost(c echo.Context) error {
 
 	updateData["post_id"] = id
 
-	updatedPost, err := h.postService.UpdatePost(updateData)
+	updatedPost, err := h.postService.UpdatePost(c.Request().Context(), updateData)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update post"})
 	}
@@ -97,7 +97,7 @@ func (h *PostHandler) DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid post ID"})
 	}
 
-	err = h.postService.DeletePost(id)
+	err = h.postService.DeletePost(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete post"})
 	}

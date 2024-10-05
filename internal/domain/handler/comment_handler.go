@@ -55,7 +55,7 @@ func (h *CommentHandler) CreateComment(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid title"})
 	}
 
-	post, err := h.postService.GetPostByTitle(title)
+	post, err := h.postService.GetPostByTitle(c.Request().Context(), title)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get post by title"})
 	}
@@ -66,7 +66,7 @@ func (h *CommentHandler) CreateComment(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid username"})
 	}
 
-	user, err := h.userService.GetUserByUsername(username)
+	user, err := h.userService.GetUserByUsername(c.Request().Context(), username)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get user"})
 	}
