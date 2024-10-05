@@ -9,39 +9,82 @@ This repository contains the backend implementation of DevSeConnect, built using
 ## Folder Structure 📁
 
 ```plaintext
-├── cmd/
-│   └── main.go                   # Main entry point of the application
-├── internal/
-│   ├── application/
-│   │   └── service/
-│   │      ├── comment_service.go
-│   │      ├── like_service.go
-│   │      ├── message_service.go
-│   │      ├── post_service.go
-│   │      ├── post_tags_service.go
-│   │      ├── tags_service.go
-│   │      └── user_service.go
-│   ├── domain/
-│   │   ├── entity/
-│   │   ├── handler/
-│   │   └── repository/
-│   ├── infrastructure/
-│   │   ├── cache/
-│   │   │   └── redis.go
-│   │   ├── database/
-│   │   │   └── postgres.go
-│   │   ├── messaging/
-│   │   │   ├── producer.go
-│   │   │   ├── rabbitmq.go
-│   │   │   └── consumers/
-│   │   ├── routing/
-│   │   │   └── router.go
-├── scripts/
-│   └── migrations/
+├── cmd
+│   ├── main.go      # Main entry point of the application           
+├── internal
+│   ├── application
+│   │   └── service
+│   │       ├── comment_service.go
+│   │       ├── like_service.go
+│   │       ├── message_service.go
+│   │       ├── post_service.go
+│   │       ├── post_tags_service.go
+│   │       ├── tags_service.go
+│   │       └── user_service.go
+│   ├── domain
+│   │   ├── entity
+│   │   │   ├── comments.go
+│   │   │   ├── likes.go
+│   │   │   ├── messages.go
+│   │   │   ├── network.go
+│   │   │   ├── posts.go
+│   │   │   ├── posttags.go
+│   │   │   ├── tags.go
+│   │   │   ├── user_connections.go
+│   │   │   └── users.go
+│   │   ├── handler
+│   │   │   ├── comment_handler.go
+│   │   │   ├── like_handler.go
+│   │   │   ├── message_handler.go
+│   │   │   ├── post_handler.go
+│   │   │   ├── post_tags_handler.go
+│   │   │   ├── tag_handler.go
+│   │   │   └── user_handler.go
+│   │   └── repository
+│   │       ├── comment_repository.go
+│   │       ├── likes_repository.go
+│   │       ├── message_repository.go
+│   │       ├── post_repository.go
+│   │       ├── post_tags_repository.go
+│   │       ├── tags_repository.go
+│   │       └── user_repository.go
+│   └── infrastructure
+│       ├── cache
+│       │   └── redis.go
+│       ├── database
+│       │   └── postgres.go
+│       ├── messaging
+│       │   ├── comment_consumer.go
+│       │   ├── consumer.go
+│       │   ├── like_consumer.go
+│       │   ├── message_consumer.go
+│       │   ├── post_consumer.go
+│       │   ├── post_tags_consumer.go
+│       │   ├── producer.go
+│       │   ├── rabbitmq.go
+│       │   ├── tags_consumer.go
+│       │   └── user_consumer.go
+│       └── routing
+│           └── router.go
+├── pkg
+│   ├── response
+│   │   └── error.go
+│   └── security
+│       └── hash.go
+├── scripts
+│   ├── migrate.sh
+│   └── migrations
+│       ├── devseconnect_insert.sql
+│       ├── devseconnect.sql
+│       ├── devseconnect_test_select2.sql
+│       └── devseconnect_test_select.sql
 ├── .gitignore                     # Git ignore rules
 ├── docker-compose.yml             # Docker Compose setup
 ├── Dockerfile                     # Dockerfile for containerization
+├── nginx.conf
+├── nohup.out
 ├── go.mod                         # Go module dependencies
+├── prometheus.yml
 ├── LICENSE                        # License file
 ```
 ## Technologies Used 🛠️
