@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -25,6 +26,7 @@ func (pc *PostConsumer) Start() error {
 }
 
 func (pc *PostConsumer) handleMessage(body []byte) error {
+	ctx := context.Background()
 	var message struct {
 		Action string      `json:"action"`
 		Data   entity.Post `json:"data"`
@@ -35,11 +37,11 @@ func (pc *PostConsumer) handleMessage(body []byte) error {
 
 	switch message.Action {
 	case "create":
-		return pc.repo.Create(&message.Data, message.Data.User.Username)
+		return pc.repo.Create(ctx, &message.Data, message.Data.User.Username)
 	case "update":
-		return pc.repo.Update(&message.Data)
+		return pc.repo.Update(ctx, &message.Data)
 	case "delete":
-		return pc.repo.Delete(message.Data.PostID)
+		return pc.repo.Delete(ctx, message.Data.PostID)
 	default:
 		return fmt.Errorf("unknown action: %s", message.Action)
 	}
