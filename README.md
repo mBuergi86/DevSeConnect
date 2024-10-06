@@ -4,7 +4,7 @@ Welcome to **DevSeConnect** – A social media platform for developers to share 
 
 ## Project Overview 🛠️
 
-This repository contains the backend implementation of DevSeConnect, built using **Go (Golang)**. The project utilizes several modern technologies including **RabbitMQ**, **PostgreSQL**, **Redis**, and **Docker** to provide a scalable and performant architecture.
+This repository contains the backend and frontend implementation of DevSeConnect, built using **Go (Golang) and Svelte**. The project utilizes several modern technologies including **RabbitMQ**, **PostgreSQL**, **Redis**, **Svelte** and **Docker** to provide a scalable and performant architecture.
 
 ## Folder Structure 📁
 
@@ -90,10 +90,12 @@ This repository contains the backend implementation of DevSeConnect, built using
 ## Technologies Used 🛠️
 
 - **Go (Golang)**
+- **Svelte** - Web Framework.
 - **PostgreSQL** – For database management.
 - **Redis** – Caching layer.
 - **RabbitMQ** – Message broker for async communication.
 - **Docker** – Containerization of the application.
+- **Grafana** – Monitoring graph visualization.
 - **Prometheus** – Monitoring tool.
 
 ## Installation 🚀
@@ -103,10 +105,13 @@ This repository contains the backend implementation of DevSeConnect, built using
 Make sure you have the following installed:
 
 - **Go v1.18+**
+- **Svelte 5**
 - **Docker** & **Docker Compose**
 - **Redis**
 - **RabbitMQ**
 - **PostgreSQL**
+- **Prometheus**
+- **Grafana**
 
 ### Steps to Install
 
@@ -126,12 +131,17 @@ Make sure you have the following installed:
 3. **Run with Docker**:
 
    ```bash
-   docker-compose up
+   docker-compose up -d --build
    ```
 
 4. **Run locally** (without Docker):
    ```bash
    go run cmd/main.go
+   ```
+   
+5. **Log Webserver**:
+   ```bash
+   docker logs -f golang_web_server
    ```
 
 ## API Endpoints 🔗
@@ -142,20 +152,28 @@ The platform uses RESTful APIs to handle different operations:
 
   - `GET /users` – Fetch all users.
   - `POST /users` – Create a new user.
+  - `PUT /users/:id` – Update a user with id.
+  - `DELETE /users/:id` – Delete a user with id.
 
 - **Posts**:
 
   - `GET /posts` – Fetch all posts.
   - `POST /posts/:username` – Create a new post.
+  - `PUT /posts/:id` – Update a post with id.
+  - `DELETE /posts/:id` – Delete a post with id.
 
 - **Comments**:
 
   - `GET /comments` – Fetch all comments.
   - `POST /comments/:title/:username` – Add a comment to a post.
+  - `PUT /comments/:id` – Update a comment with id.
+  - `DELETE /comments/:id` – Delete a comment with id.
 
 - **Likes**:
-  - `POST /posts/:title/like/:username` – Like a post.
-  - `POST /comments/:content/like/:username` – Like a comment.
+  - `GET /likes` – Fetch all likes.
+  - `POST /likes/:title/:username` – Like a post.
+  - `POST /likes/:content/:username` – Like a comment.
+  - `DELETE /likes/:id` – Delete a like with id.
 
 ## Database Schema 🗄️
 
@@ -164,6 +182,7 @@ The database is managed using **PostgreSQL**, and migration scripts are located 
 - `users`
 - `posts`
 - `comments`
+- `messages`
 - `likes`
 - `tags`
 - `post_tags`
