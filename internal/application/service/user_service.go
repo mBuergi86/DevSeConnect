@@ -130,7 +130,7 @@ func (s *UserService) UpdateUser(ctx context.Context, updateData map[string]inte
 		return nil, err
 	}
 
-	// Aktualisieren Sie nur die Felder, die im updateData vorhanden sind
+	// Update the user fields if they are present
 	if username, ok := updateData["username"].(string); ok {
 		existingUser.Username = username
 	}
