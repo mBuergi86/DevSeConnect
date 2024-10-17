@@ -22,28 +22,18 @@ func NewPostHandler(postService *service.PostService, userService *service.UserS
 }
 
 func (h *PostHandler) CreatePost(c echo.Context) error {
-	username := c.Param("username")
-
-	if username == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid username"})
-	}
-
-	user, err := h.userService.GetUserByUsername(c.Request().Context(), username)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get user"})
-	}
+	userID := c.Get("user_id").(uuid.UUID)
 
 	var post entity.Post
 	if err := c.Bind(&post); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
 
-	post.UserID = user.UserID
-	if err := h.postService.CreatePost(c.Request().Context(), &post, username); err != nil {
+	post.UserID = userID
+
+	if err := h.postService.CreatePost(c.Request().Context(), &post); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create post"})
 	}
-
-	post.User = user
 
 	return c.JSON(http.StatusCreated, post)
 }
@@ -58,10 +48,11 @@ func (h *PostHandler) GetAllPosts(c echo.Context) error {
 }
 
 func (h *PostHandler) GetPost(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid post ID"})
+	id, ok := c.Get("user_id").(uuid.UUID)
+	if !ok {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
 	}
+
 	post, err := h.postService.GetPostByID(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
@@ -70,20 +61,20 @@ func (h *PostHandler) GetPost(c echo.Context) error {
 }
 
 func (h *PostHandler) UpdatePost(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
+	id, ok := c.Get("user_id").(uuid.UUID)
+	if !ok {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid post ID"})
 	}
 
-	updateData := make(map[string]interface{})
+	var updateData entity.Post
 
 	if err := c.Bind(&updateData); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
 
-	updateData["post_id"] = id
+	updateData.UserID = id
 
-	updatedPost, err := h.postService.UpdatePost(c.Request().Context(), updateData)
+	updatedPost, err := h.postService.UpdatePost(c.Request().Context(), &updateData, id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update post"})
 	}

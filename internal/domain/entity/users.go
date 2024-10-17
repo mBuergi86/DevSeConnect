@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,7 +12,7 @@ type User struct {
 	UserID         uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"user_id"`
 	Username       string    `gorm:"uniqueIndex;not null" json:"username"`
 	Email          string    `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash   string    `gorm:"column:password_hash;not null" json:"-"` // Geändert zu PasswordHash
+	PasswordHash   string    `gorm:"column:password_hash;not null" json:"password_hash"`
 	FirstName      string    `json:"first_name"`
 	LastName       string    `json:"last_name"`
 	Bio            string    `json:"bio"`
@@ -24,6 +25,7 @@ type User struct {
 func NewUsers(username, email, password, firstName, lastName, bio, profilePicture string) (*User, error) {
 	hashedPasswort, err := security.Hash(password)
 	if err != nil {
+		log.Printf("Failed to hash password: %v\n", err)
 		return nil, err
 	}
 
@@ -31,7 +33,7 @@ func NewUsers(username, email, password, firstName, lastName, bio, profilePictur
 		UserID:         uuid.New(),
 		Username:       username,
 		Email:          email,
-		PasswordHash:   string(hashedPasswort),
+		PasswordHash:   hashedPasswort,
 		FirstName:      firstName,
 		LastName:       lastName,
 		Bio:            bio,
@@ -40,17 +42,4 @@ func NewUsers(username, email, password, firstName, lastName, bio, profilePictur
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}, nil
-}
-
-func (u *User) SetPassword(password string) error {
-	hashedPassword, err := security.Hash(password)
-	if err != nil {
-		return err
-	}
-	u.PasswordHash = string(hashedPassword)
-	return nil
-}
-
-func (u *User) CheckPassword(password string) bool {
-	return security.CheckPasswordHash(u.PasswordHash, password)
 }

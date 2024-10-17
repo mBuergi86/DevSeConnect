@@ -3,19 +3,32 @@ package handler
 import (
 	"context"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/mBuergi86/devseconnect/internal/application/service"
+	"github.com/rs/zerolog"
 )
 
 type UserHandler struct {
 	userService *service.UserService
 }
 
+type jwtCustomClaims struct {
+	UserID    string          `json:"user_id"`
+	Username  string          `json:"username"`
+	ExpiresAt jwt.NumericDate `json:"exp"`
+	jwt.RegisteredClaims
+}
+
 func NewUserHandler(userService *service.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
+
+var logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 func (h *UserHandler) Register(c echo.Context) error {
 	var input struct {
@@ -42,30 +55,50 @@ func (h *UserHandler) Register(c echo.Context) error {
 
 func (h *UserHandler) Login(c echo.Context) error {
 	var input struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}
 
 	if err := c.Bind(&input); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
 
-	user, err := h.userService.Login(c.Request().Context(), input.Email, input.Password)
+	user, token, err := h.userService.Login(c.Request().Context(), input.Username, input.Password)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid credentials"})
 	}
 
-	return c.JSON(http.StatusOK, user)
+	c.SetCookie(&http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		MaxAge:   int(time.Hour.Seconds() * 24),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	})
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"user":  user,
+		"token": token,
+	})
+}
+
+func (h *UserHandler) GetUsers(c echo.Context) error {
+	users, err := h.userService.GetUsers(context.Background())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch users"})
+	}
+
+	return c.JSON(http.StatusOK, users)
 }
 
 func (h *UserHandler) GetUser(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
-	}
+	id := c.Get("user_id").(uuid.UUID)
 
 	user, err := h.userService.GetUserByID(c.Request().Context(), id)
 	if err != nil {
+		logger.Error().Msgf("User not found: %v", err)
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 	}
 
@@ -73,10 +106,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 }
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
-	}
+	id := c.Get("user_id").(uuid.UUID)
 
 	updateData := make(map[string]interface{})
 
@@ -95,24 +125,12 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 }
 
 func (h *UserHandler) DeleteUser(c echo.Context) error {
-	id, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
-	}
+	id := c.Get("user_id").(uuid.UUID)
 
-	err = h.userService.DeleteUser(c.Request().Context(), id)
+	err := h.userService.DeleteUser(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete user"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "User successfully deleted"})
-}
-
-func (h *UserHandler) GetUsers(c echo.Context) error {
-	users, err := h.userService.GetUsers(context.Background())
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch users"})
-	}
-
-	return c.JSON(http.StatusOK, users)
 }
