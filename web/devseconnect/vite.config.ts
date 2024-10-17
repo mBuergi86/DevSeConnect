@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { enhancedImages } from '@sveltejs/enhanced-img';
 //import { Server } from 'socket.io';
 //import type { ViteDevServer } from 'vite';
 
@@ -17,7 +18,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 };*/
 
 export default defineConfig({
-	plugins: [sveltekit()],
+	plugins: [enhancedImages(), sveltekit()],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	}
