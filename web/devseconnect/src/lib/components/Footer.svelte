@@ -1,8 +1,9 @@
 <script lang="ts">
 	let { class: className = '' } = $props();
+	let _class = $state(className);
 </script>
 
-<div class={className}>
+<footer class={_class}>
 	<div class="container">
 		<p>© 2021 DevSeConnect. All rights reserved.</p>
 		<nav>
@@ -15,11 +16,23 @@
 			<a href="/contact">Contact</a>
 		</nav>
 	</div>
-</div>
+</footer>
 
 <style lang="postcss">
-	.footer_group {
+	.footer {
 		font-size: clamp(0.875rem, 0.7917rem + 0.3333vw, 1.125rem);
+	}
+
+	:global(.dark) .footer,
+	:global(.dark) .footer a {
+		background-color: var(--secondary-color-dark) !important;
+		color: var(--text-color-dark) !important;
+	}
+
+	.footer,
+	.footer a {
+		background-color: var(--secondary-color-light) !important;
+		color: var(--text-color-light) !important;
 	}
 
 	.container {
