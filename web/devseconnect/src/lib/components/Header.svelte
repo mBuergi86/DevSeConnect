@@ -31,8 +31,10 @@
 	function applyTheme() {
 		if (isDark) {
 			window.document.documentElement.classList.add('dark');
+			localStorage.setItem('theme', 'dark');
 		} else {
 			window.document.documentElement.classList.remove('dark');
+			localStorage.setItem('theme', 'light');
 		}
 	}
 
@@ -54,42 +56,42 @@
 			<nav>
 				<ul>
 					<li>
-						<a href="/">
+						<a href="/dashboard">
 							<Icon.House size="40" />
 						</a>
 					</li>
 					<li>
-						<a href="projects">
+						<a href="/dashboard/projects">
 							<Icon.Box size="40" />
 						</a>
 					</li>
 					<li>
-						<a href="/forum">
+						<a href="/dashboard/forum">
 							<Icon.MessageSquare size="40" />
 						</a>
 					</li>
 					<li>
-						<a href="/chat">
+						<a href="/dashboard/chat">
 							<Icon.MessageCircle size="40" />
 						</a>
 					</li>
 					<li>
-						<a href="/jobs">
+						<a href="/dashboard/jobs">
 							<Icon.Briefcase size="40" />
 						</a>
 					</li>
 					<li>
-						<a href="/tutorial">
+						<a href="/dashboard/tutorial">
 							<Icon.BookOpen size="40" />
 						</a>
 					</li>
 					<li>
-						<a href="/notifications">
+						<a href="/dashboard/notifications">
 							<Icon.Bell size="40" />
 						</a>
 					</li>
 					<li>
-						<a href="/profile">
+						<a href="/dashboard/profile">
 							<Icon.User size="40" />
 						</a>
 					</li>
@@ -169,14 +171,12 @@
 	}
 
 	:global(.dark) header {
-		width: 100%;
-		height: 100px;
 		background-color: var(--secondary-color-dark);
 	}
 
 	header {
 		width: 100vw;
-		height: 100px;
+		height: 80px;
 		background-color: var(--secondary-color-light);
 	}
 
