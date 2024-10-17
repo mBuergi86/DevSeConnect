@@ -10,7 +10,7 @@
 	{@render children?.()}
 </main>
 
-<Footer />
+<Footer class="footer" />
 
 <style>
 	:global(html),
