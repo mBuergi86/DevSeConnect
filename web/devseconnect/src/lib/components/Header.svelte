@@ -1,80 +1,114 @@
 <script lang="ts">
 	import logo_light from '$lib/assets/logo.png';
 	import logo_dark from '$lib/assets/logo_transparent.png';
+	import * as Icon from 'svelte-lucide';
 
 	let { children } = $props();
 
-	let theme = $state('system');
-	let dropdownOpen = $state(false);
+	let isDark = $state(false);
+	let userToggled = $state(false);
 
 	$effect(() => {
 		if (typeof window !== 'undefined') {
-			theme = localStorage.getItem('theme') || 'system'; // Lade gespeichertes Thema
-			applyTheme();
-
 			const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-			const handleChange = () => {
-				if (theme === 'system') {
+
+			if (!userToggled) {
+				isDark = mediaQuery.matches;
+				applyTheme();
+			}
+
+			mediaQuery.addEventListener('change', (e) => {
+				if (!userToggled) {
+					isDark = e.matches;
 					applyTheme();
 				}
-			};
-			mediaQuery.addEventListener('change', handleChange);
-
-			return () => {
-				mediaQuery.removeEventListener('change', handleChange);
-			};
+			});
 		}
+
+		applyTheme();
 	});
 
 	function applyTheme() {
-		if (typeof window !== 'undefined') {
-			// Entferne beide Klassen ("light" und "dark")
-			document.documentElement.classList.remove('light', 'dark');
-
-			// Wenn das Theme auf "system" steht, wende das System-Thema an
-			if (theme === 'system') {
-				const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				document.documentElement.classList.add(dark ? 'dark' : 'light');
-			} else {
-				// Ansonsten füge die Klasse direkt hinzu ("light" oder "dark")
-				document.documentElement.classList.add(theme);
-			}
+		if (isDark) {
+			window.document.documentElement.classList.add('dark');
+		} else {
+			window.document.documentElement.classList.remove('dark');
 		}
 	}
 
-	function setTheme(newTheme: string) {
-		theme = newTheme;
-		localStorage.setItem('theme', newTheme);
-		dropdownOpen = false;
+	function toggleTheme() {
+		userToggled = true;
+		isDark = !isDark;
+		applyTheme();
 	}
 </script>
 
 <header>
 	<div class="container">
-		{#if theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)}
+		{#if isDark}
 			<img src={logo_dark} alt="DevSeConnect Logo Dark" class="logo" />
 		{:else}
 			<img src={logo_light} alt="DevSeConnect Logo Light" class="logo" />
 		{/if}
 		<div class="navigation-right">
 			<nav>
-				<a href="/">Home</a>
-				<a href="/about">About</a>
-				<a href="/blog">Blog</a>
-			</nav>
-			<div class="dropdown" class:open={dropdownOpen}>
-				<button class="dropbtn" onclick={() => (dropdownOpen = !dropdownOpen)}>
-					{#if theme === 'system'}🖥️
-					{:else if theme === 'light'}☀️
-					{:else}🌙
-					{/if}
-				</button>
-				<div class="dropdown-content">
-					<button onclick={() => setTheme('system')} class:active={theme === 'system'}>🖥️</button>
-					<button onclick={() => setTheme('light')} class:active={theme === 'light'}>☀️</button>
-					<button onclick={() => setTheme('dark')} class:active={theme === 'dark'}>🌙</button>
+				<ul>
+					<li>
+						<a href="/">
+							<Icon.House size="40" />
+						</a>
+					</li>
+					<li>
+						<a href="projects">
+							<Icon.Box size="40" />
+						</a>
+					</li>
+					<li>
+						<a href="/forum">
+							<Icon.MessageSquare size="40" />
+						</a>
+					</li>
+					<li>
+						<a href="/chat">
+							<Icon.MessageCircle size="40" />
+						</a>
+					</li>
+					<li>
+						<a href="/jobs">
+							<Icon.Briefcase size="40" />
+						</a>
+					</li>
+					<li>
+						<a href="/tutorial">
+							<Icon.BookOpen size="40" />
+						</a>
+					</li>
+					<li>
+						<a href="/notifications">
+							<Icon.Bell size="40" />
+						</a>
+					</li>
+					<li>
+						<a href="/profile">
+							<Icon.User size="40" />
+						</a>
+					</li>
+					<li>
+						<a href="/logout">
+							<Icon.LogOut size="40" />
+						</a>
+					</li>
+				</ul>
+				<div class="toggleButton">
+					<button class="togglebtn" onclick={toggleTheme}>
+						{#if isDark}
+							<Icon.Sun size="40" />
+						{:else}
+							<Icon.Moon size="40" />
+						{/if}
+					</button>
 				</div>
-			</div>
+			</nav>
 		</div>
 	</div>
 </header>
@@ -82,148 +116,97 @@
 {@render children?.()}
 
 <style>
-	:global(:root) {
-		--primary-color: #d1d5db;
-		--secondary-color-dark: #1f2937;
-		--secondary-color-light: white;
-		--system-color: linear-gradient(to left, #f3f4f6 50%, #111827 50%);
-		--light-color: #f3f4f6;
-		--dark-color: #111827;
-		--text-color-light: black;
-		--text-color-dark: white;
+	.container {
+		margin: 0 auto;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		max-width: 1600px;
+		height: 100%;
 	}
 
-	:global(.dark) {
-		background-color: var(--dark-color);
-		color: white;
+	.logo {
+		width: auto;
+		height: 65px;
 	}
 
-	:global(.light) {
-		background-color: var(--light-color);
-		color: black;
+	.navigation-right {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	nav {
+		display: flex;
+		align-items: center;
+	}
+
+	nav ul {
+		display: flex;
+		gap: 1rem;
+	}
+
+	nav li {
+		list-style: none;
+	}
+
+	nav a {
+		text-decoration: none;
+	}
+
+	:global(.dark) nav a {
+		color: var(--text-color-dark);
+	}
+
+	nav a {
+		color: var(--text-color-light);
+	}
+
+	nav a:hover {
+		color: #2563eb;
+		transform: scale(1.2);
+		transition: all 0.3s ease-in-out;
 	}
 
 	:global(.dark) header {
-		padding: 1rem;
 		width: 100%;
 		height: 100px;
 		background-color: var(--secondary-color-dark);
 	}
 
-	:global(.light) header {
-		padding: 1rem;
+	header {
 		width: 100vw;
 		height: 100px;
 		background-color: var(--secondary-color-light);
 	}
 
-	.dropdown {
-		position: relative;
-		display: inline-block;
+	.toggleButton {
+		margin-left: 0.5rem;
 	}
 
-	.dropbtn {
-		background-color: var(--primary-color);
-		color: white;
-		width: 60px;
-		height: 60px;
+	.togglebtn {
+		background: transparent;
 		border: none;
 		cursor: pointer;
-		border-radius: 50%;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		transition: background-color 0.3s;
-		font-size: 20px;
 	}
 
-	.dropdown-content {
-		opacity: 0;
-		position: absolute;
-		background-color: transparent;
-		z-index: 1;
-		margin-top: 0.5rem;
-		right: 0.6rem;
-		transition: opacity 0.5s ease-in-out;
-		pointer-events: none;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
+	:global(.dark) .togglebtn {
+		color: var(--text-color-dark);
 	}
 
-	.dropdown.open .dropdown-content {
-		opacity: 1;
-		pointer-events: auto;
+	:global(.dark) .togglebtn:hover {
+		color: yellow;
 	}
 
-	.dropdown-content button {
-		color: black;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		width: 50px;
-		height: 50px;
-		border-radius: 50%;
-		margin: 5px 0;
-		font-size: 20px;
-		border: none;
-		cursor: pointer;
-		opacity: 0;
-		transform: scale(0.8);
-		transition:
-			transform 0.3s,
-			opacity 0.5s;
-	}
-
-	.dropdown.open .dropdown-content button:nth-child(1) {
-		background: var(--system-color);
-		opacity: 1;
-		transform: scale(1);
-		transition-delay: 0.1s;
-	}
-
-	.dropdown.open .dropdown-content button:nth-child(2) {
-		background-color: var(--light-color);
-		opacity: 1;
-		transform: scale(1);
-		transition-delay: 0.3s;
-	}
-
-	.dropdown.open .dropdown-content button:nth-child(3) {
-		background-color: var(--dark-color);
-		opacity: 1;
-		transform: scale(1);
-		transition-delay: 0.5s;
-	}
-
-	.dropdown.open .dropdown-content button:hover {
+	.togglebtn {
+		color: var(--text-color-light);
 		transform: scale(1.2);
-		transition: transform 0.2s ease-out;
+		transition: all 0.3s ease-in-out;
 	}
 
-	.dropdown:not(.open) .dropdown-content button:nth-child(3) {
-		opacity: 0;
-		transform: scale(0.8);
-		transition-delay: 0.5s;
-	}
-
-	.dropdown:not(.open) .dropdown-content button:nth-child(1) {
-		opacity: 0;
-		transform: scale(0.8);
-		transition-delay: 0.3s;
-	}
-
-	.dropdown:not(.open) .dropdown-content button:nth-child(2) {
-		opacity: 0;
-		transform: scale(0.8);
-		transition-delay: 0.1s;
-	}
-
-	:global(.dark) .dropdown-content button.active {
-		border: 2px solid var(--text-color-dark);
-	}
-
-	:global(.light) .dropdown-content button.active {
-		border: 2px solid var(--text-color-light);
+	.togglebtn:hover {
+		color: #2563eb;
+		transform: scale(1.2);
+		transition: all 0.3s ease-in-out;
 	}
 </style>

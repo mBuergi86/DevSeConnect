@@ -1,52 +1,69 @@
 <script lang="ts">
-	let { firstName, lastName, username, password, confirmPassword, submit } = $props();
-
-	let firstNameInput: string = $state('');
-	let lastNameInput: string = $state('');
-	let usernameInput: string = $state('');
-	let passwordInput: string = $state('');
-	let confirmPasswordInput: string = $state('');
+	type Props = {
+		method?: string;
+		action?: string;
+		first_name?: () => string;
+		last_name?: () => string;
+		username?: () => string;
+		email?: () => string;
+		password?: () => string;
+		confirmPassword?: () => string;
+		submit?: () => string;
+	};
+	const {
+		method,
+		action,
+		first_name,
+		last_name,
+		username,
+		email,
+		password,
+		confirmPassword,
+		submit
+	}: Props = $props();
 </script>
 
 <div class="container">
-	<form method="POST">
-		{#if firstName}
-			<label for="firstName">{@render firstName()}</label>
-			<input type="text" id="firstName" name="firstName" required bind:value={firstNameInput} />
+	<form {method} {action}>
+		{#if first_name}
+			<label for="first_name">{@render first_name()}</label>
+			<input type="text" id="first_name" name="first_name" required />
 		{/if}
-		{#if lastName}
-			<label for="lastName">{@render lastName()}</label>
-			<input type="text" id="lastName" name="lastName" required bind:value={lastNameInput} />
+
+		{#if last_name}
+			<label for="last_name">{@render last_name()}</label>
+			<input type="text" id="last_name" name="last_name" required />
 		{/if}
+
 		{#if username}
 			<label for="username">{@render username()}</label>
-			<input type="text" id="username" name="username" required bind:value={usernameInput} />
+			<input type="text" id="username" name="username" required />
 		{/if}
+
+		{#if email}
+			<label for="email">{@render email()}</label>
+			<input type="email" id="email" name="email" required />
+		{/if}
+
 		{#if password}
 			<label for="password">{@render password()}</label>
-			<input type="password" id="password" name="password" required bind:value={passwordInput} />
+			<input type="password" id="password" name="password" required />
 		{/if}
+
 		{#if confirmPassword}
 			<label for="confirmPassword">{@render confirmPassword()}</label>
-			<input
-				type="password"
-				id="confirmPassword"
-				name="confirmPassword"
-				required
-				bind:value={confirmPasswordInput}
-			/>
+			<input type="password" id="confirmPassword" name="confirmPassword" required />
 		{/if}
-		{#if submit}
-			<div class="form-actions">
-				<button type="reset">Reset</button>
-				<button type="submit">{@render submit()}</button>
-			</div>
-		{/if}
+
+		<div class="form-actions">
+			<button type="reset">Reset</button>
+			<button type="submit">{@render submit()}</button>
+		</div>
 	</form>
 </div>
 
 <style lang="postcss">
-	:global(:root) {
+	:root {
 		--green-button: #10b981;
 		--red-button: #ef4444;
 		--yellow-button: #f59e0b;
@@ -59,7 +76,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		margin-top: 3rem;
+		margin-top: 2rem;
 		margin-bottom: 3rem;
 		height: 100%;
 	}
