@@ -3,12 +3,21 @@ package routing
 import (
 	"os"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mBuergi86/devseconnect/internal/application/service"
 	"github.com/mBuergi86/devseconnect/internal/domain/handler"
+	jwtMiddleware "github.com/mBuergi86/devseconnect/internal/infrastructure/middleware"
 	"github.com/rs/zerolog"
 )
+
+type jwtCustomClaims struct {
+	UserID   string          `json:"user_id"`
+	Username string          `json:"username"`
+	ExpireAt jwt.NumericDate `json:"exp"`
+	jwt.RegisteredClaims
+}
 
 func SetupRouter(
 	userService *service.UserService,
@@ -28,13 +37,33 @@ func SetupRouter(
 		LogStatus: true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			logger.Info().
+				Str("Time", v.StartTime.Format("2006-01-02 15:04:05")).
+				Str("IP", c.RealIP()).AnErr("Error", v.Error).
+				Str("Host", c.Request().Host).AnErr("Error", v.Error).
 				Str("URI", v.URI).
 				Int("Status", v.Status).
-				Msg("handled request")
+				Str("Method", c.Request().Method).
+				Int64("ResponseTime", v.Latency.Milliseconds()).
+				Msgf("handled request %v", v.RequestID)
 			return nil
 		},
 	}))
 	e.Use(middleware.Recover())
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+	}))
+	e.Use(middleware.Gzip())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
+	e.Use(middleware.SecureWithConfig(middleware.SecureConfig{
+		XSSProtection:         "1; mode=block",
+		ContentTypeNosniff:    "nosniff",
+		XFrameOptions:         "DENY",
+		HSTSMaxAge:            3600,
+		HSTSExcludeSubdomains: true,
+		ContentSecurityPolicy: "default-src 'self'",
+	}))
 
 	// Create handlers
 	userHandler := handler.NewUserHandler(userService)
@@ -45,44 +74,66 @@ func SetupRouter(
 	messageHandler := handler.NewMessageHandler(messageService, userService)
 	likeHandler := handler.NewLikeHandler(likeService, postService, commentService, userService)
 
-	// User routes
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		logger.Fatal().Msg("JWT_SECRET is not set")
+	}
+
+	/* config := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(jwtCustomClaims)
+		},
+		SigningKey: []byte(secret),
+		ErrorHandler: func(c echo.Context, err error) error {
+			logger.Error().Err(err).Msgf("JWT Middleware error: %v", err)
+			return c.JSON(401, map[string]string{"error": "Unauthorized"})
+		},
+	}*/
+
+	jwtMiddleware := jwtMiddleware.JWTMiddleware(logger)
+
+	// User routes login and register
 	e.POST("/register", userHandler.Register)
 	e.POST("/login", userHandler.Login)
-	e.GET("/users", userHandler.GetUsers)
-	e.GET("/users/:id", userHandler.GetUser)
-	e.PUT("/users/:id", userHandler.UpdateUser)
-	e.DELETE("/users/:id", userHandler.DeleteUser)
 
-	e.POST("/posts/:username", postHandler.CreatePost)
-	e.GET("/posts", postHandler.GetAllPosts)
-	e.GET("/posts/:id", postHandler.GetPost)
-	e.PUT("/posts/:id", postHandler.UpdatePost)
-	e.DELETE("/posts/:id", postHandler.DeletePost)
+	authenticated := e.Group("")
+	authenticated.Use(jwtMiddleware)
 
-	e.GET("/comments", commentHandler.GetAllComments)
-	e.GET("/comments/:id", commentHandler.GetComment)
-	e.POST("/comments/:title/:username", commentHandler.CreateComment)
-	e.PUT("/comments/:id", commentHandler.UpdateComment)
-	e.DELETE("/comments/:id", commentHandler.DeleteComment)
+	authenticated.GET("/users", userHandler.GetUsers)
+	authenticated.GET("/user", userHandler.GetUser)
+	authenticated.PUT("/user/update", userHandler.UpdateUser)
+	authenticated.DELETE("/user/delete", userHandler.DeleteUser)
 
-	e.GET("/tags", tagHandler.GetTags)
-	e.GET("/tags/:id", tagHandler.GetTag)
-	e.POST("/tags", tagHandler.CreateTag)
-	e.DELETE("/tags/:id", tagHandler.DeleteTag)
+	authenticated.POST("/posts", postHandler.CreatePost)
+	authenticated.GET("/posts", postHandler.GetAllPosts)
+	authenticated.GET("/post", postHandler.GetPost)
+	authenticated.PUT("/post", postHandler.UpdatePost)
+	authenticated.DELETE("/post", postHandler.DeletePost)
 
-	e.GET("/posttags", postTagHandler.GetPostTags)
-	e.GET("/posttags/:id", postTagHandler.GetPostTag)
-	e.POST("/posttags", postTagHandler.CreatePostTag)
+	authenticated.GET("/comments", commentHandler.GetAllComments)
+	authenticated.GET("/comment", commentHandler.GetComment)
+	authenticated.POST("/comments/:title/:username", commentHandler.CreateComment)
+	authenticated.PUT("/comment", commentHandler.UpdateComment)
+	authenticated.DELETE("/comment", commentHandler.DeleteComment)
 
-	e.GET("/messages", messageHandler.GetAllMessages)
-	e.GET("/messages/:id", messageHandler.GetMessage)
-	e.POST("/messages", messageHandler.CreateMessage)
-	e.PUT("/messages/:id", messageHandler.UpdateMessage)
-	e.DELETE("/messages/:id", messageHandler.DeleteMessage)
+	authenticated.GET("/tags", tagHandler.GetTags)
+	authenticated.GET("/tag", tagHandler.GetTag)
+	authenticated.POST("/tags", tagHandler.CreateTag)
+	authenticated.DELETE("/tag", tagHandler.DeleteTag)
 
-	e.GET("/likes", likeHandler.GetAllLikes)
-	e.GET("/likes/:id", likeHandler.GetLike)
-	e.POST("/likes/:title/:username", likeHandler.CreateLike)
+	authenticated.GET("/posttags", postTagHandler.GetPostTags)
+	authenticated.GET("/posttag", postTagHandler.GetPostTag)
+	authenticated.POST("/posttags", postTagHandler.CreatePostTag)
+
+	authenticated.GET("/messages", messageHandler.GetAllMessages)
+	authenticated.GET("/message", messageHandler.GetMessage)
+	authenticated.POST("/messages", messageHandler.CreateMessage)
+	authenticated.PUT("/message", messageHandler.UpdateMessage)
+	authenticated.DELETE("/message", messageHandler.DeleteMessage)
+
+	authenticated.GET("/likes", likeHandler.GetAllLikes)
+	authenticated.GET("/like", likeHandler.GetLike)
+	authenticated.POST("/likes/:title/:username", likeHandler.CreateLike)
 
 	return e
 }

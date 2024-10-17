@@ -37,9 +37,9 @@ func (pc *PostConsumer) handleMessage(body []byte) error {
 
 	switch message.Action {
 	case "create":
-		return pc.repo.Create(ctx, &message.Data, message.Data.User.Username)
+		return pc.repo.Create(ctx, &message.Data)
 	case "update":
-		return pc.repo.Update(ctx, &message.Data)
+		return pc.repo.Update(ctx, &message.Data, message.Data.UserID)
 	case "delete":
 		return pc.repo.Delete(ctx, message.Data.PostID)
 	default:
