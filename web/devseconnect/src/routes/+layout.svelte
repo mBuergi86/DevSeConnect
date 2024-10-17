@@ -9,8 +9,7 @@
 		--primary-color: #d1d5db;
 		--secondary-color-dark: #1f2937;
 		--secondary-color-light: white;
-		--system-color: linear-gradient(to left, #f3f4f6 50%, #111827 50%);
-		--light-color: #f3f4f6;
+		--light-color: #d1d5db;
 		--dark-color: #111827;
 		--text-color-light: black;
 		--text-color-dark: white;
