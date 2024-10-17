@@ -12,10 +12,10 @@ import (
 
 type PostRepository interface {
 	FindAll(ctx context.Context) ([]*entity.Post, error)
-	FindByID(ctx context.Context, id uuid.UUID) (*entity.Post, error)
+	FindByID(ctx context.Context, id uuid.UUID) ([]*entity.Post, error)
 	FindByTitle(ctx context.Context, title string) (*entity.Post, error)
-	Create(ctx context.Context, post *entity.Post, username string) error
-	Update(ctx context.Context, post *entity.Post) error
+	Create(ctx context.Context, post *entity.Post) error
+	Update(ctx context.Context, post *entity.Post, userID uuid.UUID) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -38,14 +38,14 @@ func (r *PostgresPostRepository) FindAll(ctx context.Context) ([]*entity.Post, e
 	return posts, err
 }
 
-func (r *PostgresPostRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Post, error) {
-	var post entity.Post
-	err := r.DB.Preload("User").First(&post, "post_id = ?", id).Error
+func (r *PostgresPostRepository) FindByID(ctx context.Context, id uuid.UUID) ([]*entity.Post, error) {
+	var post []*entity.Post
+	err := r.DB.Preload("User").Find(&post, "user_id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return &post, err
+	return post, err
 }
 
 func (r *PostgresPostRepository) FindByTitle(ctx context.Context, title string) (*entity.Post, error) {
@@ -58,15 +58,9 @@ func (r *PostgresPostRepository) FindByTitle(ctx context.Context, title string) 
 	return &post, err
 }
 
-func (r *PostgresPostRepository) Create(ctx context.Context, post *entity.Post, username string) error {
+func (r *PostgresPostRepository) Create(ctx context.Context, post *entity.Post) error {
 	tx := r.DB.Begin()
-	var user entity.User
-	if err := tx.First(&user, "username = ?", username).Error; err != nil {
-		tx.Rollback()
-		return fmt.Errorf("Failed to find user with username %s: %w", username, err)
-	}
 
-	post.UserID = user.UserID
 	if err := tx.Create(post).Error; err != nil {
 		tx.Rollback()
 		return fmt.Errorf("Failed to create post: %w", err)
@@ -75,9 +69,14 @@ func (r *PostgresPostRepository) Create(ctx context.Context, post *entity.Post, 
 	return tx.Commit().Error
 }
 
-func (r *PostgresPostRepository) Update(ctx context.Context, post *entity.Post) error {
+func (r *PostgresPostRepository) Update(ctx context.Context, post *entity.Post, userID uuid.UUID) error {
 	tx := r.DB.Begin()
-	if err := tx.Save(post).Error; err != nil {
+	if err := tx.Model(&entity.Post{}).
+		Where("user_id = ?", userID).
+		Updates(map[string]interface{}{
+			"title":   post.Title,
+			"content": post.Content,
+		}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

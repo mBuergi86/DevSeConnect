@@ -4,19 +4,30 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
+	"os"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/mBuergi86/devseconnect/internal/domain/entity"
 	"github.com/mBuergi86/devseconnect/internal/domain/repository"
+	"github.com/mBuergi86/devseconnect/pkg/security"
 	"github.com/rabbitmq/amqp091-go"
+	"github.com/rs/zerolog"
 )
 
 type UserService struct {
 	userRepo     repository.UserRepository
 	rabbitMQChan *amqp091.Channel
+	jwtSecret    string
+}
+
+type jwtCustomClaims struct {
+	UserID   string          `json:"user_id"`
+	Username string          `json:"username"`
+	ExpireAt jwt.NumericDate `json:"exp"`
+	jwt.RegisteredClaims
 }
 
 func NewUserService(userRepo repository.UserRepository, rabbitMQChan *amqp091.Channel) (*UserService, error) {
@@ -36,7 +47,7 @@ func NewUserService(userRepo repository.UserRepository, rabbitMQChan *amqp091.Ch
 		return nil, err
 	}
 
-	return &UserService{userRepo: userRepo, rabbitMQChan: rabbitMQChan}, nil
+	return &UserService{userRepo: userRepo, rabbitMQChan: rabbitMQChan, jwtSecret: os.Getenv("JWT_SECRET")}, nil
 }
 
 func (s *UserService) publishUserEvent(eventType string, user *entity.User) error {
@@ -46,7 +57,7 @@ func (s *UserService) publishUserEvent(eventType string, user *entity.User) erro
 	}
 	eventJSON, err := json.Marshal(event)
 	if err != nil {
-		fmt.Printf("Failed to marshal event: %v\n", err)
+		log.Printf("Failed to marshal event: %v\n", err)
 		return err
 	}
 
@@ -95,20 +106,49 @@ func (s *UserService) Register(ctx context.Context, username, email, password, f
 	return user, nil
 }
 
-func (s *UserService) Login(ctx context.Context, email, password string) (*entity.User, error) {
-	user, err := s.userRepo.FindByEmail(ctx, email)
+func (s *UserService) Login(ctx context.Context, username, password string) (*entity.User, string, error) {
+	logger := zerolog.New(os.Stdout)
+	user, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, "", err
 	}
-	if !user.CheckPassword(password) {
-		return nil, errors.New("invalid credentials")
+
+	if ok := security.CheckPasswordHash(user.PasswordHash, password); !ok {
+		log.Println("Invalid credentials")
+		return nil, "", errors.New("invalid credentials")
 	}
+
+	claims := &jwtCustomClaims{
+		UserID:   user.UserID.String(),
+		Username: user.Username,
+		ExpireAt: *jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "devseconnect",
+			Subject:   "user_token",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	logger.Log().Msgf("Claims: %+v\n", claims)
+	logger.Log().Msgf("JWT Secret: %s\n", s.jwtSecret)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	logger.Log().Msgf("Token: %+v\n", token)
+
+	tokenString, err := token.SignedString([]byte(s.jwtSecret))
+	if err != nil {
+		return nil, "", errors.New("failed to sign token")
+	}
+
+	logger.Log().Msgf("TokenString: %s\n", tokenString)
+
 	if err := s.publishUserEvent("user_logged_in", user); err != nil {
-		// Log the error, but don't fail the login
-		// TODO: Implement proper error logging
-		println("Failed to publish user logged in event:", err)
+		log.Printf("Failed to publish user logged in event: %v", err)
 	}
-	return user, nil
+
+	return user, tokenString, nil
 }
 
 func (s *UserService) GetUserByID(ctx context.Context, id uuid.UUID) (*entity.User, error) {

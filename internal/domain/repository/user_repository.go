@@ -89,17 +89,27 @@ func (r *PostgresUserRepository) FindByUsername(ctx context.Context, username st
 
 	// Try to get from cache
 	cachedUser, err := r.getUserFromCache("username", username)
-	if err == nil && cachedUser != nil {
+	if err != nil {
+		log.Printf("Error getting user from cache: %v\n", err)
+	} else if cachedUser != nil {
 		return cachedUser, nil
 	}
+
+	log.Printf("cachedUser: %v", cachedUser)
 
 	// If not in cache, get from database
 	if err := r.DB.Where("username = ?", username).First(&user).Error; err != nil {
 		return nil, err
 	}
 
+	if err := r.DB.Select("password_hash").Where("username = ?", username).First(&user).Error; err != nil {
+		return nil, err
+	}
+
 	// Cache the user for future requests
-	r.cacheUser(&user)
+	if err := r.cacheUser(&user); err != nil {
+		log.Printf("Error caching user: %v\n", err)
+	}
 
 	return &user, nil
 }

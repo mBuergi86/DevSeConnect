@@ -3,14 +3,14 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/mBuergi86/devseconnect/internal/domain/entity"
 	"github.com/mBuergi86/devseconnect/internal/domain/repository"
 	"github.com/rabbitmq/amqp091-go"
+	"github.com/rs/zerolog"
 )
 
 type PostService struct {
@@ -31,22 +31,10 @@ func NewPostService(postRepo repository.PostRepository, userRepo repository.User
 	}
 }
 
-func (s *PostService) CreatePost(ctx context.Context, post *entity.Post, username string) error {
-	if post == nil {
-		return errors.New("Post is nil")
-	}
-	if username == "" {
-		return errors.New("Username is empty")
-	}
+var logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
-	user, err := s.userRepo.FindByUsername(ctx, username)
-	if err != nil {
-		return fmt.Errorf("Failed to find user by username: %s: %w", username, err)
-	}
-
-	post.UserID = user.UserID
-
-	if err := s.postRepo.Create(ctx, post, username); err != nil {
+func (s *PostService) CreatePost(ctx context.Context, post *entity.Post) error {
+	if err := s.postRepo.Create(ctx, post); err != nil {
 		return err
 	}
 	s.publishPostEvent("post_created", post)
@@ -58,7 +46,7 @@ func (s *PostService) GetAllPosts(ctx context.Context) ([]*entity.Post, error) {
 	return s.postRepo.FindAll(ctx)
 }
 
-func (s *PostService) GetPostByID(ctx context.Context, id uuid.UUID) (*entity.Post, error) {
+func (s *PostService) GetPostByID(ctx context.Context, id uuid.UUID) ([]*entity.Post, error) {
 	return s.postRepo.FindByID(ctx, id)
 }
 
@@ -66,44 +54,14 @@ func (s *PostService) GetPostByTitle(ctx context.Context, title string) (*entity
 	return s.postRepo.FindByTitle(ctx, title)
 }
 
-func (s *PostService) UpdatePost(ctx context.Context, updateData map[string]interface{}) (*entity.Post, error) {
-	postID, ok := updateData["post_id"].(uuid.UUID)
-	if !ok {
-		return nil, errors.New("Invalid post ID")
-	}
-
-	existingPost, err := s.postRepo.FindByID(ctx, postID)
-	if err != nil {
+func (s *PostService) UpdatePost(ctx context.Context, post *entity.Post, userID uuid.UUID) (*entity.Post, error) {
+	if err := s.postRepo.Update(ctx, post, userID); err != nil {
 		return nil, err
 	}
 
-	// Actually update the post with the new data
-	if userID, ok := updateData["user_id"].(uuid.UUID); ok {
-		existingPost.UserID = userID
-	}
-	if title, ok := updateData["title"].(string); ok {
-		existingPost.Title = title
-	}
-	if content, ok := updateData["content"].(string); ok {
-		existingPost.Content = content
-	}
-	if mediaType, ok := updateData["media_type"].(string); ok {
-		existingPost.MediaType = mediaType
-	}
-	if mediaURL, ok := updateData["media_url"].(string); ok {
-		existingPost.MediaURL = mediaURL
-	}
-	if isDeleted, ok := updateData["is_deleted"].(bool); ok {
-		existingPost.IsDeleted = isDeleted
-	}
+	s.publishPostEvent("post_updated", post)
 
-	if err := s.postRepo.Update(ctx, existingPost); err != nil {
-		return nil, err
-	}
-
-	s.publishPostEvent("post_updated", existingPost)
-
-	return existingPost, nil
+	return post, nil
 }
 
 func (s *PostService) DeletePost(ctx context.Context, id uuid.UUID) error {
