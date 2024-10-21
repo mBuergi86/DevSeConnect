@@ -76,7 +76,7 @@ func SetupRouter(
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		logger.Fatal().Msg("JWT_SECRET is not set")
+		logger.Error().Msg("JWT_SECRET is not set")
 	}
 
 	/* config := echojwt.Config{
