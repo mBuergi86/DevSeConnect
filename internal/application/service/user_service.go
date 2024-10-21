@@ -14,7 +14,6 @@ import (
 	"github.com/mBuergi86/devseconnect/internal/domain/repository"
 	"github.com/mBuergi86/devseconnect/pkg/security"
 	"github.com/rabbitmq/amqp091-go"
-	"github.com/rs/zerolog"
 )
 
 type UserService struct {
@@ -107,7 +106,6 @@ func (s *UserService) Register(ctx context.Context, username, email, password, f
 }
 
 func (s *UserService) Login(ctx context.Context, username, password string) (*entity.User, string, error) {
-	logger := zerolog.New(os.Stdout)
 	user, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return nil, "", err
@@ -130,19 +128,12 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 		},
 	}
 
-	logger.Log().Msgf("Claims: %+v\n", claims)
-	logger.Log().Msgf("JWT Secret: %s\n", s.jwtSecret)
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	logger.Log().Msgf("Token: %+v\n", token)
 
 	tokenString, err := token.SignedString([]byte(s.jwtSecret))
 	if err != nil {
 		return nil, "", errors.New("failed to sign token")
 	}
-
-	logger.Log().Msgf("TokenString: %s\n", tokenString)
 
 	if err := s.publishUserEvent("user_logged_in", user); err != nil {
 		log.Printf("Failed to publish user logged in event: %v", err)
