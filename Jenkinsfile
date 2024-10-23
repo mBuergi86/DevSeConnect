@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('SonarQube Analysis') {
             environment {
-                SCANNER_HOME = tool 'SonarQubeScanner'
+                SCANNER_HOME = tool 'SonarScanner'
                 PROJECT_KEY = "devseconnect"
                 SONAR_TOKEN = "sqa_3879f4ff886e948e1f3a433d6c554e84fdbb2164"
             }
