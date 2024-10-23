@@ -2,28 +2,27 @@ pipeline {
     agent any
 
     stages {
-        stage('SCM') {
-            steps {
-                checkout scm
-            }
-        }
         stage('SonarQube Analysis') {
+            environment {
+                SCANNER_HOME = tool 'SonarQubeScanner'
+                PROJECT_KEY = "devseconnect"
+                SONAR_TOKEN = "sqa_3879f4ff886e948e1f3a433d6c554e84fdbb2164"
+            }
             steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
-                    withSonarQubeEnv('SonarQubeServer') {
-                        sh """
-                        ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=devseconnect \
-                        -Dsonar.host.url=http://sonarqube:9000
-                        """
-                    }
+                withSonarQubeEnv('SonarQube') { 
+                    sh '''
+                    $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectKey=$PROJECT_KEY \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://sonarqube:9000
+                    -Dsonar.login=$SONAR_TOKEN
+                    '''
                 }
             }
         }
         stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
+                timeout(time: 1, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
