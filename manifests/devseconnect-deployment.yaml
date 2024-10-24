@@ -56,8 +56,8 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: redis-password
-                  key: devseconnect-secret
+                  name: devseconnect-secret
+                  key: redis-password
             - name: RABBITMQ_URL
               valueFrom:
                 configMapKeyRef:
