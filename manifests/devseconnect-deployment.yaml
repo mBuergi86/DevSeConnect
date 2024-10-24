@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devseconnect-web-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devseconnect-web-server
+  template:
+    metadata:
+      labels:
+        app: devseconnect-web-server
+    spec:
+      containers:
+        - name: devseconnect-web-server
+          image: username/devseconnect-web_server:latest
+          ports:
+            - containerPort: 1323
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: PORT
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devseconnect-secret
+                  key: db-password
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: DB_NAME
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: DB_PORT
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: REDIS_URL
+            - name: RABBITMQ_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: RABBITMQ_URL
+            - name: RABBIT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: RABBIT_URL
+            - name: RABBIT_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: devseconnect-config
+                  key: RABBIT_USER
+            - name: RABBIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devseconnect-secret
+                  key: rabbitmq-password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: devseconnect-secret
+                  key: jwt-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devseconnect-web-server-service
+spec:
+  selector:
+    app: devseconnect-web-server
+  ports:
+    - protocol: TCP
+      port: 1323
+      targetPort: 1323
+  type: LoadBalancer
