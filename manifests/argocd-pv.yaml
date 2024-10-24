@@ -7,5 +7,15 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
+  PersistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
   hostPath:
     path: /mnt/data/argocd
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - markussarch
