@@ -25,8 +25,5 @@ WORKDIR /app
 # Copy the compiled Go binary from the builder stage
 COPY --from=builder /app/main .
 
-# Copy .env file
-COPY .env .env
-
 # Command to run the binary
 CMD ["./main"]
