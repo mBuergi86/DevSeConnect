@@ -11,9 +11,9 @@ pipeline {
         steps {
           script {
             def scannerHome = tool 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-            }
             withSonarQubeEnv('SonarQube') {
               sh "${scannerHome}/bin/sonar-scanner"
+            }
           }
         }
       }
