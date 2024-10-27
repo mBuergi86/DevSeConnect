@@ -3,21 +3,16 @@ pipeline {
 
     stages {
       stage('SCM Checkout') {
-            steps{
-           git branch: 'main', url: 'https://github.com/mbuergi86/devseconnect.git'
-            }
+        steps{
+          git branch: 'main', url: 'https://github.com/mBuergi86/DevSeConnect.git'
         }
-        // run sonarqube test
-        stage('Run Sonarqube') {
-            environment {
-                scannerHome = tool 'devseconnect';
-            }
-            steps {
-              withSonarQubeEnv(credentialsId: 'devseconnect-credentials', installationName: 'devseconnect installation') {
-                sh "${scannerHome}/bin/sonar-scanner"
-              }
-            }
+      }
+      stage('SonarQube Analysis') {
+        def scannerHome = tool 'SonarScanner';
+        withSonarQubeEnv() {
+          sh "${scannerHome}/bin/sonar-scanner"
         }
+      }
     }
 }
 
