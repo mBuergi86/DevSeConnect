@@ -32,23 +32,15 @@ pipeline {
       stage('Build Docker Image') {
         steps {
           script {
-        docker.build "${IMAGE_NAME}:${IMAGE_TAG}"
+            app = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
           }
         }
       }
       stage('Push Docker Image') {
         steps {
           script {
-            withCredentials([
-              usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                // Login to Docker Hub
-                sh "docker login -u $USERNAME -p $PASSWORD"
-                // Build Docker image
-                sh "docker build -t ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} ."
-                // Tag Docker image
-                sh "docker tag ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} index.docker.io/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
-                // Push Docker image to Docker Hub
-                sh "docker push index.docker.io/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+              docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS) {
+                app.push("${IMAGE_TAG}")
             }
           }
         }
