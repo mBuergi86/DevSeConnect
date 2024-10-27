@@ -39,9 +39,12 @@ pipeline {
       stage('Push Docker Image') {
         steps {
           script {
-              docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS) {
-                app.push("${IMAGE_TAG}")
-            }
+            withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+            docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS) {
+              // Tag Docker image with the actual Docker Hub username
+              sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+              // Push Docker image to Docker Hub
+              sh "docker push ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
           }
         }
       }
