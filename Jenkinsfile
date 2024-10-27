@@ -10,9 +10,8 @@ pipeline {
       stage('SonarQube Analysis') {
         steps {
           script {
-            def scannerHome = tool name: 'sonarqube'
             withSonarQubeEnv('SonarQube') {
-              sh "${scannerHome}/bin/sonar-scanner" \
+              sh "opt/sonarqube/bin/sonar-scanner" \
               "-Dsonar.projectKey=devseconnect" \
               "-Dsonar.sources=." \
               "-Dsonar.host.url=http://sonarqube:9000" \
