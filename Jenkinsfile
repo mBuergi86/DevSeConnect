@@ -10,12 +10,9 @@ pipeline {
       stage('SonarQube Analysis') {
         steps {
           script {
-            withSonarQubeEnv('SonarQube') {
-              sh "opt/sonarqube/bin/sonar-scanner" \
-              "-Dsonar.projectKey=devseconnect" \
-              "-Dsonar.sources=." \
-              "-Dsonar.host.url=http://sonarqube:9000" \
-              "-Dsonar.login=sqp_093d42af62a29c56f20da4ce238f3bd4096dae7a"
+            def scannerHome = tool 'sonarqube'
+            withSonarQubeEnv(credentialsId: 'Secret text', installationName: 'admin') {
+              sh "${scannerHome}/bin/sonar-scanner" \
             }
           }
         }
