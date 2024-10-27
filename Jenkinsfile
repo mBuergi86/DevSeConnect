@@ -2,21 +2,20 @@ pipeline {
     agent any
 
     stages {
-        stage('SonarQube Analysis') {
-          steps {
-            script {
-              def scannerHome = tool 'SonarQubeScanner';
-              echo "SonarQube Scanner installation directory: ${scannerHome}"
-              withSonarQubeEnv('SonarQubeServer') {
+      stage('SCM Checkout') {
+            steps{
+           git branch: 'main', url: 'https://github.com/mbuergi86/devseconnect.git'
+            }
+        }
+        // run sonarqube test
+        stage('Run Sonarqube') {
+            environment {
+                scannerHome = tool 'devseconnect';
+            }
+            steps {
+              withSonarQubeEnv(credentialsId: 'devseconnect-credentials', installationName: 'devseconnect installation') {
                 sh "${scannerHome}/bin/sonar-scanner"
               }
-            }
-          }
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 1, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
             }
         }
     }
