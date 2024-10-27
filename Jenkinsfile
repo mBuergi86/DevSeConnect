@@ -11,8 +11,9 @@ pipeline {
         steps {
           script {
             def scannerHome = tool 'sonarqube'
-            withSonarQubeEnv(credentialsId: 'Secret text', installationName: 'admin') {
+            withSonarQubeEnv(credentialsId: 'b72ae151-1f76-4b62-adf9-694aa0eeaab9', installationName: 'sonar') {
               sh "${scannerHome}/bin/sonar-scanner" \
+              -Dsonar.projectKey=devseconnect
             }
           }
         }
