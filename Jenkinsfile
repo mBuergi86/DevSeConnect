@@ -10,9 +10,13 @@ pipeline {
       stage('SonarQube Analysis') {
         steps {
           script {
-            def scannerHome = tool 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+            def scannerHome = tool 'SonarScanner'
             withSonarQubeEnv('SonarQube') {
-              sh "${scannerHome}/bin/sonar-scanner"
+              sh "${scannerHome}/bin/sonar-scanner" \
+              "-Dsonar.projectKey=devseconnect" \
+              "-Dsonar.sources=." \
+              "-Dsonar.host.url=http://sonarqube:9000" \
+              "-Dsonar.login=sqp_093d42af62a29c56f20da4ce238f3bd4096dae7a"
             }
           }
         }
