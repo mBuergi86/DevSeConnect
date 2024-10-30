@@ -1,0 +1,126 @@
+.
+├── cmd
+│   └── tmp
+├── helm
+│   ├── exporter
+│   │   └── postgres
+│   ├── grafana
+│   ├── prometheus
+│   └── redis
+├── internal
+│   ├── application
+│   │   └── service
+│   ├── domain
+│   │   ├── entity
+│   │   ├── handler
+│   │   └── repository
+│   └── infrastructure
+│       ├── cache
+│       ├── database
+│       ├── messaging
+│       ├── middleware
+│       └── routing
+├── manifests
+├── node_modules
+│   └── bits-ui -> .pnpm/bits-ui@0.21.16_svelte@4.2.19/node_modules/bits-ui
+├── pkg
+│   ├── response
+│   └── security
+├── scripts
+│   └── migrations
+├── test
+│   └── handler_test
+├── tmp
+└── web
+    └── devseconnect
+        ├── build
+        │   ├── client
+        │   │   └── _app
+        │   │       └── immutable
+        │   │           ├── assets
+        │   │           ├── chunks
+        │   │           ├── entry
+        │   │           └── nodes
+        │   └── server
+        │       └── chunks
+        ├── e2e
+        ├── node_modules
+        │   ├── autoprefixer -> .pnpm/autoprefixer@10.4.20_postcss@8.4.47/node_modules/autoprefixer
+        │   ├── @eslint
+        │   │   ├── config-array -> ../.pnpm/@eslint+config-array@0.18.0/node_modules/@eslint/config-array
+        │   │   ├── core -> ../.pnpm/@eslint+core@0.6.0/node_modules/@eslint/core
+        │   │   ├── eslintrc -> ../.pnpm/@eslint+eslintrc@3.1.0/node_modules/@eslint/eslintrc
+        │   │   ├── js -> ../.pnpm/@eslint+js@9.12.0/node_modules/@eslint/js
+        │   │   ├── object-schema -> ../.pnpm/@eslint+object-schema@2.1.4/node_modules/@eslint/object-schema
+        │   │   └── plugin-kit -> ../.pnpm/@eslint+plugin-kit@0.2.0/node_modules/@eslint/plugin-kit
+        │   ├── eslint -> .pnpm/eslint@9.12.0_jiti@1.21.6/node_modules/eslint
+        │   ├── @eslint-community
+        │   │   ├── eslint-utils -> ../.pnpm/@eslint-community+eslint-utils@4.4.0_eslint@9.12.0_jiti@1.21.6_/node_modules/@eslint-community/eslint-utils
+        │   │   └── regexpp -> ../.pnpm/@eslint-community+regexpp@4.11.1/node_modules/@eslint-community/regexpp
+        │   ├── eslint-compat-utils -> .pnpm/eslint-compat-utils@0.5.1_eslint@9.12.0_jiti@1.21.6_/node_modules/eslint-compat-utils
+        │   ├── eslint-config-prettier -> .pnpm/eslint-config-prettier@9.1.0_eslint@9.12.0_jiti@1.21.6_/node_modules/eslint-config-prettier
+        │   ├── eslint-plugin-svelte -> .pnpm/eslint-plugin-svelte@2.44.1_eslint@9.12.0_jiti@1.21.6__svelte@5.0.0-next.264/node_modules/eslint-plugin-svelte
+        │   ├── eslint-scope -> .pnpm/eslint-scope@8.1.0/node_modules/eslint-scope
+        │   ├── eslint-visitor-keys -> .pnpm/eslint-visitor-keys@4.1.0/node_modules/eslint-visitor-keys
+        │   ├── globals -> .pnpm/globals@15.11.0/node_modules/globals
+        │   ├── @playwright
+        │   │   └── test -> ../.pnpm/@playwright+test@1.48.0/node_modules/@playwright/test
+        │   ├── postcss-import -> .pnpm/postcss-import@16.1.0_postcss@8.4.47/node_modules/postcss-import
+        │   ├── postcss-nested -> .pnpm/postcss-nested@6.2.0_postcss@8.4.47/node_modules/postcss-nested
+        │   ├── postcss-normalize -> .pnpm/postcss-normalize@13.0.1_browserslist@4.24.0_postcss@8.4.47/node_modules/postcss-normalize
+        │   ├── prettier -> .pnpm/prettier@3.3.3/node_modules/prettier
+        │   ├── prettier-plugin-svelte -> .pnpm/prettier-plugin-svelte@3.2.7_prettier@3.3.3_svelte@5.0.0-next.264/node_modules/prettier-plugin-svelte
+        │   ├── prettier-plugin-tailwindcss -> .pnpm/prettier-plugin-tailwindcss@0.6.8_prettier-plugin-svelte@3.2.7_prettier@3.3.3_svelte@5.0.0-next.264__prettier@3.3.3/node_modules/prettier-plugin-tailwindcss
+        │   ├── socket.io -> .pnpm/socket.io@4.8.0/node_modules/socket.io
+        │   ├── socket.io-client -> .pnpm/socket.io-client@4.8.0/node_modules/socket.io-client
+        │   ├── svelte -> .pnpm/svelte@5.0.0-next.264/node_modules/svelte
+        │   ├── svelte-awesome-icons -> .pnpm/svelte-awesome-icons@2.0.0-next.17_svelte@5.0.0-next.264/node_modules/svelte-awesome-icons
+        │   ├── svelte-check -> .pnpm/svelte-check@4.0.5_picomatch@4.0.2_svelte@5.0.0-next.264_typescript@5.6.3/node_modules/svelte-check
+        │   ├── svelte-eslint-parser -> .pnpm/svelte-eslint-parser@0.41.1_svelte@5.0.0-next.264/node_modules/svelte-eslint-parser
+        │   ├── @sveltejs
+        │   │   ├── adapter-auto -> ../.pnpm/@sveltejs+adapter-auto@3.2.5_@sveltejs+kit@2.7.0_@sveltejs+vite-plugin-svelte@4.0.0-next.7_sv_mmkcvbsj7dwabaseohh2z4wc7q/node_modules/@sveltejs/adapter-auto
+        │   │   ├── adapter-node -> ../.pnpm/@sveltejs+adapter-node@5.2.7_@sveltejs+kit@2.7.0_@sveltejs+vite-plugin-svelte@4.0.0-next.7_sv_gzubb4dibn2oglthymbyv42v44/node_modules/@sveltejs/adapter-node
+        │   │   ├── enhanced-img -> ../.pnpm/@sveltejs+enhanced-img@0.3.9_rollup@4.24.0_svelte@5.0.0-next.264_vite@5.4.8_@types+node@22.7.5_/node_modules/@sveltejs/enhanced-img
+        │   │   ├── kit -> ../.pnpm/@sveltejs+kit@2.7.0_@sveltejs+vite-plugin-svelte@4.0.0-next.7_svelte@5.0.0-next.264_vite@5.4._gsno76njwnepta35lu35wldzye/node_modules/@sveltejs/kit
+        │   │   └── vite-plugin-svelte -> ../.pnpm/@sveltejs+vite-plugin-svelte@4.0.0-next.7_svelte@5.0.0-next.264_vite@5.4.8_@types+node@22.7.5_/node_modules/@sveltejs/vite-plugin-svelte
+        │   ├── svelte-lucide -> .pnpm/svelte-lucide@2.0.0-next.7_svelte@5.0.0-next.264/node_modules/svelte-lucide
+        │   ├── @tailwindcss
+        │   │   └── typography -> ../.pnpm/@tailwindcss+typography@0.5.15_tailwindcss@3.4.13/node_modules/@tailwindcss/typography
+        │   ├── tailwindcss -> .pnpm/tailwindcss@3.4.13/node_modules/tailwindcss
+        │   ├── @types
+        │   │   └── eslint -> ../.pnpm/@types+eslint@9.6.1/node_modules/@types/eslint
+        │   ├── typescript -> .pnpm/typescript@5.6.3/node_modules/typescript
+        │   ├── @typescript-eslint
+        │   │   ├── eslint-plugin -> ../.pnpm/@typescript-eslint+eslint-plugin@8.8.1_@typescript-eslint+parser@8.8.1_eslint@9.12.0_jiti@1.2_twy6vbb7xup2x2hmsdd7gm57ku/node_modules/@typescript-eslint/eslint-plugin
+        │   │   ├── parser -> ../.pnpm/@typescript-eslint+parser@8.8.1_eslint@9.12.0_jiti@1.21.6__typescript@5.6.3/node_modules/@typescript-eslint/parser
+        │   │   ├── scope-manager -> ../.pnpm/@typescript-eslint+scope-manager@8.8.1/node_modules/@typescript-eslint/scope-manager
+        │   │   ├── types -> ../.pnpm/@typescript-eslint+types@8.8.1/node_modules/@typescript-eslint/types
+        │   │   ├── typescript-estree -> ../.pnpm/@typescript-eslint+typescript-estree@8.8.1_typescript@5.6.3/node_modules/@typescript-eslint/typescript-estree
+        │   │   ├── type-utils -> ../.pnpm/@typescript-eslint+type-utils@8.8.1_eslint@9.12.0_jiti@1.21.6__typescript@5.6.3/node_modules/@typescript-eslint/type-utils
+        │   │   ├── utils -> ../.pnpm/@typescript-eslint+utils@8.8.1_eslint@9.12.0_jiti@1.21.6__typescript@5.6.3/node_modules/@typescript-eslint/utils
+        │   │   └── visitor-keys -> ../.pnpm/@typescript-eslint+visitor-keys@8.8.1/node_modules/@typescript-eslint/visitor-keys
+        │   ├── typescript-eslint -> .pnpm/typescript-eslint@8.8.1_eslint@9.12.0_jiti@1.21.6__typescript@5.6.3/node_modules/typescript-eslint
+        │   ├── vite -> .pnpm/vite@5.4.8_@types+node@22.7.5/node_modules/vite
+        │   └── vitest -> .pnpm/vitest@2.1.2_@types+node@22.7.5/node_modules/vitest
+        ├── src
+        │   ├── lib
+        │   │   ├── assets
+        │   │   │   └── images
+        │   │   └── components
+        │   └── routes
+        │       ├── dashboard
+        │       │   ├── chat
+        │       │   ├── forum
+        │       │   ├── jobs
+        │       │   ├── notifications
+        │       │   ├── profile
+        │       │   ├── projects
+        │       │   └── tutorial
+        │       ├── home
+        │       │   ├── login
+        │       │   └── register
+        │       └── logout
+        ├── static
+        └── tests
+
+124 directories
