@@ -22,7 +22,7 @@ type User struct {
 	UpdatedAt      time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
-func NewUsers(username, email, password, firstName, lastName, bio, profilePicture string) (*User, error) {
+func NewUser(username, email, password, firstName, lastName, bio, profilePicture string) (*User, error) {
 	hashedPasswort, err := security.Hash(password)
 	if err != nil {
 		log.Printf("Failed to hash password: %v\n", err)
