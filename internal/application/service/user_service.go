@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -11,98 +12,84 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/mBuergi86/devseconnect/internal/domain/entity"
+	"github.com/mBuergi86/devseconnect/internal/domain/models"
 	"github.com/mBuergi86/devseconnect/internal/domain/repository"
+	"github.com/mBuergi86/devseconnect/internal/infrastructure/messaging"
 	"github.com/mBuergi86/devseconnect/pkg/security"
 	"github.com/rabbitmq/amqp091-go"
+	"github.com/rs/zerolog"
 )
 
 type UserService struct {
 	userRepo     repository.UserRepository
 	rabbitMQChan *amqp091.Channel
+	producer     *messaging.Producer
 	jwtSecret    string
+	logger       zerolog.Logger
 }
 
 type jwtCustomClaims struct {
-	UserID   string          `json:"user_id"`
-	Username string          `json:"username"`
-	ExpireAt jwt.NumericDate `json:"exp"`
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
-func NewUserService(userRepo repository.UserRepository, rabbitMQChan *amqp091.Channel) (*UserService, error) {
-	if userRepo == nil {
-		return nil, errors.New("user repository is required")
-	}
-
-	_, err := rabbitMQChan.QueueDeclare(
-		"user_queue", // name
-		true,         // durable
-		false,        // delete when unused
-		false,        // exclusive
-		false,        // no-wait
-		nil,          // arguments
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UserService{userRepo: userRepo, rabbitMQChan: rabbitMQChan, jwtSecret: os.Getenv("JWT_SECRET")}, nil
+func NewUserService(userRepo repository.UserRepository, rabbitMQChan *amqp091.Channel, producer *messaging.Producer) (*UserService, error) {
+	return &UserService{
+			userRepo:     userRepo,
+			rabbitMQChan: rabbitMQChan,
+			producer:     producer,
+			jwtSecret:    os.Getenv("JWT_SECRET"),
+			logger:       zerolog.New(os.Stderr).With().Timestamp().Str("component", "user_service").Logger(),
+		},
+		nil
 }
 
-func (s *UserService) publishUserEvent(eventType string, user *entity.User) error {
-	event := map[string]interface{}{
-		"type": eventType,
-		"user": user,
-	}
-	eventJSON, err := json.Marshal(event)
+func (s *UserService) publishUserEvent(ctx context.Context, eventType string, user *entity.User) error {
+	userData, err := json.Marshal(user)
 	if err != nil {
-		log.Printf("Failed to marshal event: %v\n", err)
-		return err
+		s.logger.Error().Err(err).Msg("Failed to marshal user data")
+		return fmt.Errorf("failed to marshal user data: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err = s.rabbitMQChan.PublishWithContext(ctx,
-		"user_events", // exchange
-		"user_queue",  // routing key
-		false,         // mandatory
-		false,         // immediate
-		amqp091.Publishing{
-			ContentType: "application/json",
-			Body:        eventJSON,
-		})
-	if err != nil {
-		log.Printf("Failed to publish event: %v\n", err)
-		return err
+	message := models.EventMessage{
+		Action: eventType,
+		Data:   json.RawMessage(userData),
 	}
 
-	log.Printf("Published %s event for user %s\n", eventType, user.UserID)
+	if err = s.producer.PublishMessage("user_events", "user_queue", message); err != nil {
+		s.logger.Error().
+			Err(err).
+			Str("event_type", eventType).
+			Msgf("failed to publish %s event: %v", eventType, err)
+		return fmt.Errorf("failed to publish %s event: %w", eventType, err)
+	}
+
+	s.logger.Info().
+		Str("event_type", eventType).
+		Msg("successfully published user event")
 	return nil
 }
 
-func (s *UserService) Register(ctx context.Context, username, email, password, firstName, lastName, bio, profilePicture string) (*entity.User, error) {
-	existingUser, _ := s.userRepo.FindByEmail(ctx, email)
-	if existingUser != nil {
-		return nil, errors.New("user with this email already exists")
-	}
-	existingUser, _ = s.userRepo.FindByUsername(ctx, username)
-	if existingUser != nil {
-		return nil, errors.New("user with this username already exists")
-	}
-	user, err := entity.NewUsers(username, email, password, firstName, lastName, bio, profilePicture)
+func (s *UserService) Register(ctx context.Context, user *entity.User) error {
+	hashedPassword, err := security.Hash(user.PasswordHash)
 	if err != nil {
-		return nil, err
+		s.logger.Error().Err(err).Msg("Failed to hash password")
+		return fmt.Errorf("failed to hash password: %w", err)
 	}
-	if err := s.userRepo.Create(ctx, user); err != nil {
-		return nil, err
+
+	user.PasswordHash = hashedPassword
+
+	//if err := s.userRepo.Create(ctx, user); err != nil {
+	//	return fmt.Errorf("failed to create user: %w", err)
+	//}
+
+	if err := s.publishUserEvent(ctx, "user_registered", user); err != nil {
+		s.logger.Error().Err(err).Msg("Failed to publish user registered event")
 	}
-	if err := s.publishUserEvent("user_registered", user); err != nil {
-		// Log the error, but don't fail the registration
-		// TODO: Implement proper error logging
-		println("Failed to publish user registered event:", err)
-	}
-	return user, nil
+
+	s.logger.Info().Str("user_id", user.UserID.String()).Msg("User registered successfully")
+	return nil
 }
 
 func (s *UserService) Login(ctx context.Context, username, password string) (*entity.User, string, error) {
@@ -119,12 +106,14 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 	claims := &jwtCustomClaims{
 		UserID:   user.UserID.String(),
 		Username: user.Username,
-		ExpireAt: *jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "devseconnect",
-			Subject:   "user_token",
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    "devseconnect",
+			Subject:   "user",
+			ID:        user.UserID.String(),
+			Audience:  []string{user.Username},
 		},
 	}
 
@@ -135,9 +124,9 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 		return nil, "", errors.New("failed to sign token")
 	}
 
-	if err := s.publishUserEvent("user_logged_in", user); err != nil {
-		log.Printf("Failed to publish user logged in event: %v", err)
-	}
+	s.logger.Info().
+		Str("user_id", user.UserID.String()).
+		Msgf("Expired at: %v", claims.ExpiresAt.Time)
 
 	return user, tokenString, nil
 }
@@ -158,6 +147,7 @@ func (s *UserService) UpdateUser(ctx context.Context, updateData map[string]inte
 
 	existingUser, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to find user by ID")
 		return nil, err
 	}
 
@@ -185,13 +175,14 @@ func (s *UserService) UpdateUser(ctx context.Context, updateData map[string]inte
 	}
 
 	if err := s.userRepo.Update(ctx, existingUser); err != nil {
+		s.logger.Error().Err(err).Msg("Failed to update user")
 		return nil, err
 	}
 
-	if err := s.publishUserEvent("user_updated", existingUser); err != nil {
-		// Log the error, but don't fail the update
-		// TODO: Implement
-		log.Printf("Failed to publish user updated event: %v\n", err)
+	s.logger.Info().Str("user_id", userID.String()).Msg("User updated successfully")
+
+	if err := s.publishUserEvent(ctx, "user_updated", existingUser); err != nil {
+		s.logger.Error().Err(err).Msg("Failed to publish user updated event")
 	}
 
 	return existingUser, nil
@@ -200,16 +191,21 @@ func (s *UserService) UpdateUser(ctx context.Context, updateData map[string]inte
 func (s *UserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	user, err := s.userRepo.FindByID(ctx, id)
 	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to find user by ID")
 		return err
 	}
+
 	if err := s.userRepo.Delete(ctx, id); err != nil {
+		s.logger.Error().Err(err).Msg("Failed to delete user")
 		return err
 	}
-	if err := s.publishUserEvent("user_deleted", user); err != nil {
-		// Log the error, but don't fail the deletion
-		// TODO: Implement proper error logging
-		println("Failed to publish user deleted event:", err)
+
+	s.logger.Info().Str("user_id", id.String()).Msg("User deleted successfully")
+
+	if err := s.publishUserEvent(ctx, "user_deleted", user); err != nil {
+		s.logger.Error().Err(err).Msg("Failed to publish user deleted event")
 	}
+
 	return nil
 }
 
