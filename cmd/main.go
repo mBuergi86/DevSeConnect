@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/mBuergi86/devseconnect/internal/application/service"
@@ -66,6 +65,11 @@ func main() {
 		log.Fatalf("Failed to declare an exchange: %v", err)
 	}
 
+	producer, err := messaging.NewProducer(rabbitmqConn)
+	if err != nil {
+		log.Fatalf("Failed to create producer: %v", err)
+	}
+
 	// Setup repositories
 	userRepo := repository.NewUserRepository(db, redisClient)
 	postRepo := repository.NewPostRepository(db)
@@ -76,7 +80,7 @@ func main() {
 	likeRepo := repository.NewLikeRepository(db)
 
 	// Setup services
-	userService, err := service.NewUserService(userRepo, rabbitMQChan)
+	userService, err := service.NewUserService(userRepo, rabbitMQChan, producer)
 	if err != nil {
 		log.Fatalf("Failed to create user service: %v", err)
 	}
@@ -133,8 +137,11 @@ func main() {
 	mc := messaging.NewMessageConsumer(messageConsumer, messageRepo)
 	lc := messaging.NewLikeConsumer(likeConsumer, likeRepo)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go func() {
-		if err := uc.Start(); err != nil {
+		if err := uc.Start(ctx); err != nil {
 			log.Fatalf("Failed to start user consumer: %v", err)
 		}
 	}()
@@ -186,7 +193,7 @@ func main() {
 	// Start server in a goroutine
 	go func() {
 		log.Printf("Server starting on port %s", port)
-		if err := router.Start(":" + port); err != nil {
+		if err := router.Start("0.0.0.0:" + port); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
@@ -196,10 +203,6 @@ func main() {
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 	log.Println("Shutting down server...")
-
-	// Context with timeout for graceful shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	if err := router.Shutdown(ctx); err != nil {
 		log.Fatalf("Failed to shutdown server: %v", err)
