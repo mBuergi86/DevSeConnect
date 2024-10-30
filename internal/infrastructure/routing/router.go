@@ -44,15 +44,18 @@ func SetupRouter(
 				Int("Status", v.Status).
 				Str("Method", c.Request().Method).
 				Int64("ResponseTime", v.Latency.Milliseconds()).
-				Msgf("handled request %v", v.RequestID)
+				AnErr("Error", v.Error).
+				Msg("Handled request")
 			return nil
 		},
 	}))
 	e.Use(middleware.Recover())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+		AllowOrigins:  []string{"*"},
+		AllowMethods:  []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+		AllowHeaders:  []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		ExposeHeaders: []string{echo.HeaderAuthorization},
 	}))
 	e.Use(middleware.Gzip())
 	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
