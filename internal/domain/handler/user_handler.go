@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/mBuergi86/devseconnect/internal/application/service"
+	"github.com/mBuergi86/devseconnect/internal/domain/entity"
 	"github.com/rs/zerolog"
 )
 
@@ -18,9 +19,9 @@ type UserHandler struct {
 }
 
 type jwtCustomClaims struct {
-	UserID    string          `json:"user_id"`
-	Username  string          `json:"username"`
-	ExpiresAt jwt.NumericDate `json:"exp"`
+	UserID   string          `json:"user_id"`
+	Username string          `json:"username"`
+	ExpireAt jwt.NumericDate `json:"exp"`
 	jwt.RegisteredClaims
 }
 
@@ -32,21 +33,28 @@ var logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 func (h *UserHandler) Register(c echo.Context) error {
 	var input struct {
-		Username       string `json:"username" validate:"required"`
-		Email          string `json:"email" validate:"required,email"`
-		Password       string `json:"password" validate:"required,min=6"`
-		FirstName      string `json:"first_name" validate:"required"`
-		LastName       string `json:"last_name" validate:"required"`
-		Bio            string `json:"bio"`
-		ProfilePicture string `json:"profile_picture"`
+		Username  string `json:"username" validate:"required"`
+		Email     string `json:"email" validate:"required,email"`
+		Password  string `json:"password" validate:"required,min=6"`
+		FirstName string `json:"first_name" validate:"required"`
+		LastName  string `json:"last_name" validate:"required"`
 	}
 
 	if err := c.Bind(&input); err != nil {
+		logger.Error().Err(err).Msg("Failed to bind input")
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
 
-	user, err := h.userService.Register(c.Request().Context(), input.Username, input.Email, input.Password, input.FirstName, input.LastName, input.Bio, input.ProfilePicture)
-	if err != nil {
+	user := &entity.User{
+		Username:     input.Username,
+		Email:        input.Email,
+		PasswordHash: input.Password,
+		FirstName:    input.FirstName,
+		LastName:     input.LastName,
+	}
+
+	if err := h.userService.Register(c.Request().Context(), user); err != nil {
+		logger.Error().Err(err).Msg("Failed to register user")
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
