@@ -120,7 +120,9 @@ func (r *PostgresUserRepository) Create(ctx context.Context, user *entity.User) 
 		tx.Rollback()
 		return err
 	}
-	tx.Commit()
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
 	return r.cacheUser(user)
 }
 
@@ -130,7 +132,9 @@ func (r *PostgresUserRepository) Update(ctx context.Context, user *entity.User) 
 		tx.Rollback()
 		return err
 	}
-	tx.Commit()
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
 	return r.cacheUser(user)
 }
 
@@ -140,7 +144,9 @@ func (r *PostgresUserRepository) Delete(ctx context.Context, id uuid.UUID) error
 		tx.Rollback()
 		return err
 	}
-	tx.Commit()
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
 	return r.removeUserFromCache(id)
 }
 
