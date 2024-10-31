@@ -61,13 +61,8 @@ pipeline {
         stage('Update Kubernetes Manifest') {
           steps {
             script {
-                echo "USERNAME: ${USERNAME}"
-                echo "IMAGE_NAME: ${IMAGE_NAME}"
-                echo "IMAGE_TAG: ${IMAGE_TAG}"
-                echo "MANIFEST_FILE: ${MANIFEST_FILE}"
-
-                withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                  sh "sed -i 's#image:.*#image: ${USERNAME}\\/${IMAGE_NAME}:${IMAGE_TAG}#' ${MANIFEST_FILE}"
+              withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                sh "sed -i 's#image:.*#image: ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}#' ${MANIFEST_FILE}"
               }
             }
           }
@@ -76,7 +71,7 @@ pipeline {
         stage('Commit and Push Changes') {
             steps {
               script {
-                  withCredentials([usernamePassword(credentialsId: 'GIT_CREDS', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                  withCredentials([usernamePassword(credentialsId: GIT_CREDS, usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
                     sh """
                     git config --global user.name "${GIT_USER}"
                     git config --global user.email "markus.buergi1986@gmail.com"
