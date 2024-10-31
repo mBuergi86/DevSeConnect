@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: devseconnect-web-server
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: devseconnect-web-server
@@ -95,4 +95,72 @@ spec:
     - protocol: TCP
       port: 1323
       targetPort: 1323
-  type: LoadBalancer
+  type: ClusterIP # Using ClusterIP, Traefik will handle load balancing and routing to the pods
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: golang-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /register
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
+          - path: /login
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
+          - path: /users
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
+          - path: /user
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
+          - path: /posts
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
+          - path: /post
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
+          - path: /comments
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
+          - path: /comment
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
