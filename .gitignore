@@ -30,5 +30,9 @@ go.work.sum
 # air file
 .air.toml
 
+# Temporary files
 cmd/tmp/
 tmp/
+
+# Scannerwork SonarQube file
+*.scannerwork/
