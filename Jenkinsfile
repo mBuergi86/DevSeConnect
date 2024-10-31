@@ -5,12 +5,15 @@ pipeline {
         DOCKER_CREDENTIALS = 'dockerHubCredentials'
         IMAGE_NAME = 'devseconnect-web_server'
         IMAGE_TAG = 'latest'
+        GIT_CREDS = 'gitHubCredentials'
+        REPO_URL = 'https://github.com/mBuergi86/DevSeConnect.git'
+        MANIFEST_FILE = './manifests/devseconnect-web_server.yaml'
     }
 
     stages {
         stage('SCM Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/mBuergi86/DevSeConnect.git'
+                git branch: 'main', url: "${REPO_URL}"
             }
         }
         
@@ -44,13 +47,36 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS) {
-                            // Tag Docker image with the actual Docker Hub username
                             sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
-                            // Push Docker image to Docker Hub
                             sh "docker push ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}"
                         }
                     }
                 }
+            }
+        }
+
+        stage('Update Kubernetes Manifest') {
+          steps {
+            script {
+              withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'USERNAME']) {
+                sh "sed -i 's#image:.*#image: ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}#' ${MANIFEST_FILE}"
+            }
+          }
+        }
+
+        stage('Commit and Push Changes') {
+            steps {
+              script {
+                  withCredentials([usernamePassword(credentialsId: GIT_CREDS, usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh """
+                    git config --global user.name "${GIT_USER}"
+                    git config --global user.email "markus.buergi1986@gmail.com"
+                    git add ${MANIFEST_FILE}
+                    git commit -m "Update image tag to ${IMAGE_TAG}"
+                    git push https://${GIT_USER}:${GIT_PASS}@github.com/mBuergi86/DevSeConnect.git main
+                    """
+                  }
+              }
             }
         }
     }
