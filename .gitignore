@@ -35,4 +35,4 @@ cmd/tmp/
 tmp/
 
 # Scannerwork SonarQube file
-*.scannerwork/
+.scannerwork/
