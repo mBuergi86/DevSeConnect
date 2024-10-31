@@ -164,3 +164,17 @@ spec:
                 name: devseconnect-web-server
                 port:
                   number: 1323
+          - path: /tags
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
+          - path: /tag
+            pathType: Prefix
+            backend:
+              service:
+                name: devseconnect-web-server
+                port:
+                  number: 1323
