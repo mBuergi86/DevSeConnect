@@ -9,6 +9,7 @@ pipeline {
         REPO_URL = 'https://github.com/mBuergi86/DevSeConnect.git'
         MANIFEST_FILE = '${WORKSPACE}/manifests/devseconnect-deployment.yaml'
         PUSH_FILE = 'manifests/devseconnect-deployment.yaml'
+        DOCKER_BUILDKIT = '1'
     }
 
     stages {
@@ -40,7 +41,11 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                  sh """
+                  export DOCKER_BUILDKIT=${DOCKER_BUILDKIT}
+                  docker buildx create --use || true
+                  docker buildx build --platform linux/amd64,linux/arm64 -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                  """
                 }
             }
         }
