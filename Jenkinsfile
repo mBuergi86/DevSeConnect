@@ -26,7 +26,7 @@ pipeline {
                         ${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=devseconnect \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://sonarqube:9000 \
+                        -Dsonar.host.url=http://sonarqube:9001 \
                         -Dsonar.login=sqp_173cd2445358301887311d9f0825f2d8f8ff7671
                         """
                     }
@@ -60,6 +60,7 @@ pipeline {
             script {
               withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                 sh "sed -i 's#image:.*#image: ${USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}#' ${MANIFEST_FILE}"
+              }
             }
           }
         }
@@ -87,4 +88,3 @@ pipeline {
         }
     }
 }
-
