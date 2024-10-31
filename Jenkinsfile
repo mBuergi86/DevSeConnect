@@ -13,7 +13,9 @@ pipeline {
     stages {
         stage('SCM Checkout') {
             steps {
-                git branch: 'main', url: "${REPO_URL}"
+              checkout scm: [$class: 'GitSCM', 
+                      userRemoteConfigs: [[url: "${REPO_URL}", credentialsId: "${GIT_CREDS}"]], 
+                      branches: [[name: 'main']]]
             }
         }
         
