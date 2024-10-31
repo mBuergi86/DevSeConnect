@@ -8,6 +8,7 @@ pipeline {
         GIT_CREDS = 'GitHub_token'
         REPO_URL = 'https://github.com/mBuergi86/DevSeConnect.git'
         MANIFEST_FILE = '${WORKSPACE}/manifests/devseconnect-deployment.yaml'
+        PUSH_FILE = 'manifests/devseconnect-deployment.yaml'
     }
 
     stages {
@@ -74,7 +75,8 @@ pipeline {
                     sh """
                     git config --global user.name "${GIT_USER}"
                     git config --global user.email "markus.buergi1986@gmail.com"
-                    git add ${MANIFEST_FILE}
+                    git status
+                    git add ${PUSH_FILE}
                     git commit -m "Update image tag to ${IMAGE_TAG}"
                     git push https://${GIT_USER}:${GIT_PASS}@github.com/mBuergi86/DevSeConnect.git main
                     """
