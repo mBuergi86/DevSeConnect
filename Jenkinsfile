@@ -7,7 +7,7 @@ pipeline {
         IMAGE_TAG = 'latest'
         GIT_CREDS = 'GitHub_token'
         REPO_URL = 'https://github.com/mBuergi86/DevSeConnect.git'
-        MANIFEST_FILE = './manifests/devseconnect-web_server.yaml'
+        MANIFEST_FILE = '${WORKSPACE}/manifests/devseconnect-web_server.yaml'
     }
 
     stages {
