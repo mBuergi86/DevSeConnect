@@ -5,7 +5,7 @@ pipeline {
         DOCKER_CREDENTIALS = 'dockerHubCredentials'
         IMAGE_NAME = 'devseconnect-web_server'
         IMAGE_TAG = 'latest'
-        GIT_CREDS = 'gitHubCredentials'
+        GIT_CREDS = 'GitHub_token'
         REPO_URL = 'https://github.com/mBuergi86/DevSeConnect.git'
         MANIFEST_FILE = './manifests/devseconnect-web_server.yaml'
     }
