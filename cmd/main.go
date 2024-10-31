@@ -2,52 +2,53 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 
-	"github.com/joho/godotenv"
 	"github.com/mBuergi86/devseconnect/internal/application/service"
 	"github.com/mBuergi86/devseconnect/internal/domain/repository"
 	"github.com/mBuergi86/devseconnect/internal/infrastructure/cache"
 	"github.com/mBuergi86/devseconnect/internal/infrastructure/database"
 	"github.com/mBuergi86/devseconnect/internal/infrastructure/messaging"
 	"github.com/mBuergi86/devseconnect/internal/infrastructure/routing"
+	"github.com/rs/zerolog"
 )
 
+var logger zerolog.Logger
+
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	//if err := godotenv.Load(); err != nil {
+	//	logger.Fatal().Err(err).Msg("Error loading .env file")
+	//}
 
 	// Initialize PostgreSQL
 	db, err := database.InitPostgres()
 	if err != nil {
-		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
+		logger.Fatal().Err(err).Msg("Failed to connect to PostgreSQL")
 	}
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatalf("Failed to get SQL DB: %v", err)
+		logger.Fatal().Err(err).Msg("Failed to get SQL DB")
 	}
 	defer sqlDB.Close()
 
 	// Initialize Redis
 	redisClient, err := cache.InitRedis()
 	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		logger.Fatal().Err(err).Msg("Failed to connect to Redis")
 	}
 	defer redisClient.Close()
 
 	// Initialize RabbitMQ
 	rabbitmqConn, err := messaging.InitRabbitMQ()
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+		logger.Fatal().Err(err).Msg("Failed to connect to RabbitMQ")
 	}
 	defer rabbitmqConn.Close()
 
 	rabbitMQChan, err := rabbitmqConn.Channel()
 	if err != nil {
-		log.Fatalf("Failed to create RabbitMQ channel: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create RabbitMQ channel: %v", err)
 	}
 	defer rabbitMQChan.Close()
 
@@ -62,12 +63,12 @@ func main() {
 		nil,           // arguments
 	)
 	if err != nil {
-		log.Fatalf("Failed to declare an exchange: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to declare an exchange: %v", err)
 	}
 
 	producer, err := messaging.NewProducer(rabbitmqConn)
 	if err != nil {
-		log.Fatalf("Failed to create producer: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create producer: %v", err)
 	}
 
 	// Setup repositories
@@ -82,7 +83,7 @@ func main() {
 	// Setup services
 	userService, err := service.NewUserService(userRepo, rabbitMQChan, producer)
 	if err != nil {
-		log.Fatalf("Failed to create user service: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create user service: %v", err)
 	}
 
 	postService := service.NewPostService(postRepo, userRepo, rabbitMQChan)
@@ -95,37 +96,37 @@ func main() {
 	// Setup consumer
 	userConsumer, err := messaging.NewConsumer(rabbitmqConn, "user_queue")
 	if err != nil {
-		log.Fatalf("Failed to create user consumer: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create user consumer: %v", err)
 	}
 
 	postConsumer, err := messaging.NewConsumer(rabbitmqConn, "post_queue")
 	if err != nil {
-		log.Fatalf("Failed to create post consumer: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create post consumer: %v", err)
 	}
 
 	commentConsumer, err := messaging.NewConsumer(rabbitmqConn, "comment_queue")
 	if err != nil {
-		log.Fatalf("Failed to create comment consumer: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create comment consumer: %v", err)
 	}
 
 	tagConsumer, err := messaging.NewConsumer(rabbitmqConn, "tag_queue")
 	if err != nil {
-		log.Fatalf("Failed to create tag consumer: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create tag consumer: %v", err)
 	}
 
 	postTagConsumer, err := messaging.NewConsumer(rabbitmqConn, "post_tag_queue")
 	if err != nil {
-		log.Fatalf("Failed to create post tag consumer: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create post tag consumer: %v", err)
 	}
 
 	messageConsumer, err := messaging.NewConsumer(rabbitmqConn, "message_queue")
 	if err != nil {
-		log.Fatalf("Failed to create message consumer: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create message consumer: %v", err)
 	}
 
 	likeConsumer, err := messaging.NewConsumer(rabbitmqConn, "like_queue")
 	if err != nil {
-		log.Fatalf("Failed to create like consumer: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to create like consumer: %v", err)
 	}
 
 	// Start consumer
@@ -142,43 +143,43 @@ func main() {
 
 	go func() {
 		if err := uc.Start(ctx); err != nil {
-			log.Fatalf("Failed to start user consumer: %v", err)
+			logger.Fatal().Err(err).Msgf("Failed to start user consumer: %v", err)
 		}
 	}()
 
 	go func() {
 		if err := pc.Start(); err != nil {
-			log.Fatalf("Failed to start post consumer: %v", err)
+			logger.Fatal().Err(err).Msgf("Failed to start post consumer: %v", err)
 		}
 	}()
 
 	go func() {
 		if err := cc.Start(); err != nil {
-			log.Fatalf("Failed to start comment consumer: %v", err)
+			logger.Fatal().Err(err).Msgf("Failed to start comment consumer: %v", err)
 		}
 	}()
 
 	go func() {
 		if err := tc.Start(); err != nil {
-			log.Fatalf("Failed to start tag consumer: %v", err)
+			logger.Fatal().Err(err).Msgf("Failed to start tag consumer: %v", err)
 		}
 	}()
 
 	go func() {
 		if err := ptc.Start(); err != nil {
-			log.Fatalf("Failed to start post tag consumer: %v", err)
+			logger.Fatal().Err(err).Msgf("Failed to start post tag consumer: %v", err)
 		}
 	}()
 
 	go func() {
 		if err := mc.Start(); err != nil {
-			log.Fatalf("Failed to start message consumer: %v", err)
+			logger.Fatal().Err(err).Msgf("Failed to start message consumer: %v", err)
 		}
 	}()
 
 	go func() {
 		if err := lc.Start(); err != nil {
-			log.Fatalf("Failed to start like consumer: %v", err)
+			logger.Fatal().Err(err).Msgf("Failed to start like consumer: %v", err)
 		}
 	}()
 
@@ -192,9 +193,9 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		log.Printf("Server starting on port %s", port)
+		logger.Info().Msgf("Server starting on port %s", port)
 		if err := router.Start("0.0.0.0:" + port); err != nil {
-			log.Fatalf("Failed to start server: %v", err)
+			logger.Fatal().Err(err).Msgf("Failed to start server: %v", err)
 		}
 	}()
 
@@ -202,11 +203,11 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	log.Println("Shutting down server...")
+	logger.Info().Msg("Shutting down server...")
 
 	if err := router.Shutdown(ctx); err != nil {
-		log.Fatalf("Failed to shutdown server: %v", err)
+		logger.Fatal().Err(err).Msgf("Failed to shutdown server: %v", err)
 	}
 
-	log.Println("Server exiting properly")
+	logger.Info().Msg("Server exited properly")
 }
