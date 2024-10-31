@@ -43,8 +43,8 @@ pipeline {
                 script {
                   sh """
                   export DOCKER_BUILDKIT=${DOCKER_BUILDKIT}
-                  docker buildx create --use || true
-                  docker buildx build --platform linux/amd64,linux/arm64 -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                  ~/.docker/cli-plugins/docker-buildx create --use || true
+                  ~/.docker/cli-plugins/docker-buildx build --platform linux/amd64,linux/arm64 -t ${IMAGE_NAME}:${IMAGE_TAG} .
                   """
                 }
             }
