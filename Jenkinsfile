@@ -75,13 +75,26 @@ pipeline {
             steps {
               script {
                   withCredentials([usernamePassword(credentialsId: GIT_CREDS, usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
-                    sh "git config --global user.name ${GIT_USER}"
-                    sh "git config --global user.email ${GIT_MAIL}"
-                    sh "git checkout main"
-                    sh "git add ."
-                    sh "git commit -m 'Update image tag to ${IMAGE_TAG}' || echo 'No changes to commit'"
-                    sh "git pull --rebase https://${GIT_USER}:${GIT_PASS}@github.com/mBuergi86/DevSeConnect.git main"
-                    sh "git push https://${GIT_USER}:${GIT_PASS}@github.com/mBuergi86/DevSeConnect.git main"
+                    sh '''
+                      # Configure Git user and email
+                      git config --global user.name "$GIT_USER"
+                      git config --global user.email "${GIT_MAIL}"
+                      
+                      # Checkout main branch
+                      git checkout main
+                      
+                      # Add and commit changes
+                      git add .
+                      git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes to commit"
+                      
+                      # Stash changes (if any) to handle pull conflicts
+                      git stash || true
+                      git pull --rebase https://$GIT_USER:$GIT_PASS@github.com/mBuergi86/DevSeConnect.git main
+                      git stash pop || true
+                      
+                      # Push changes
+                      git push https://$GIT_USER:$GIT_PASS@github.com/mBuergi86/DevSeConnect.git main
+                      '''
                   }
               }
             }
