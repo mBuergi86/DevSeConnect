@@ -2,5 +2,5 @@ projectKey=devseconnect
 serverUrl=http://sonarqube:9000
 serverVersion=9.9.7.96285
 dashboardUrl=http://sonarqube:9000/dashboard?id=devseconnect
-ceTaskId=AZLnPKPDueQ-AMj-V4BI
-ceTaskUrl=http://sonarqube:9000/api/ce/task?id=AZLnPKPDueQ-AMj-V4BI
+ceTaskId=AZLnPY2jueQ-AMj-V4BJ
+ceTaskUrl=http://sonarqube:9000/api/ce/task?id=AZLnPY2jueQ-AMj-V4BJ
