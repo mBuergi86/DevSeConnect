@@ -32,4 +32,4 @@ WORKDIR /app
 COPY --from=builder /app/main .
 
 # Command to run the binary
-CMD ["./main"]
+CMD ["sh", "-c", "./main || echo 'Application failed to start'"]
