@@ -13,7 +13,7 @@ pipeline {
     }
 
     stages {
-        stage('SCM Checkout') {
+        stage('🛠️ SCM Checkout') {
             steps {
               checkout scm: [$class: 'GitSCM', 
                       userRemoteConfigs: [[url: "${REPO_URL}", credentialsId: "${GIT_CREDS}"]], 
@@ -21,7 +21,7 @@ pipeline {
             }
         }
         
-        stage('SonarQube Analysis') {
+        stage('🔍 SonarQube Analysis') {
             steps {
                 script {
                     def scannerHome = tool 'sonarqube'
@@ -38,19 +38,18 @@ pipeline {
             }
         }
         
-        stage('Build Docker Image') {
+        stage('🐳 Build Docker Image') {
             steps {
                 script {
                   sh """
                   export DOCKER_BUILDKIT=${DOCKER_BUILDKIT}
-                  ~/.docker/cli-plugins/docker-buildx create --use || true
-                  ~/.docker/cli-plugins/docker-buildx build --platform linux/amd64,linux/arm64 -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                  docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                   """
                 }
             }
         }
         
-        stage('Push Docker Image') {
+        stage('📤 Push Docker Image') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
@@ -63,7 +62,7 @@ pipeline {
             }
         }
 
-        stage('Update Kubernetes Manifest') {
+        stage('📝 Update Kubernetes Manifest') {
           steps {
             script {
               withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
@@ -73,7 +72,7 @@ pipeline {
           }
         }
 
-        stage('Commit and Push Changes') {
+        stage('📌 Commit and Push Changes') {
             steps {
               script {
                   withCredentials([usernamePassword(credentialsId: GIT_CREDS, usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
@@ -94,7 +93,7 @@ pipeline {
     
     post {
         always {
-            echo 'Pipeline finished'
+            echo '✅ Pipeline finished'
         }
     }
 }
