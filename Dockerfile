@@ -17,10 +17,10 @@ RUN go mod download
 COPY . .
 
 # Build the Go application
-RUN go build -v -o main ./cmd/main.go
+RUN go build -v -o main ./cmd
 
 # Second stage: Create a minimal image for running the Go binary
-FROM alpine:latest AS runner
+FROM alpine:latest
 
 # Install the ca-certificates package to have SSL/TLS certificates
 RUN apk --no-cache add ca-certificates
@@ -31,5 +31,8 @@ WORKDIR /app
 # Copy the compiled Go binary from the builder stage
 COPY --from=builder /app/main .
 
+# Expose the port the application wil run on (default for Echo is 1323)
+EXPOSE 1323
+
 # Command to run the binary
-CMD ["sh", "-c", "./main || echo 'Application failed to start'"]
+CMD ["./main"]
