@@ -31,6 +31,9 @@ WORKDIR /app
 # Copy the compiled Go binary from the builder stage
 COPY --from=builder /app/main .
 
+# After copying the binary in the second stage
+RUN chmod +x ./main
+
 # Expose the port the application wil run on (default for Echo is 1323)
 EXPOSE 1323
 
