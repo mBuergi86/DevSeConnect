@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -80,9 +81,14 @@ func (s *UserService) Register(ctx context.Context, user *entity.User) error {
 
 	user.PasswordHash = hashedPassword
 
-	//if err := s.userRepo.Create(ctx, user); err != nil {
-	//	return fmt.Errorf("failed to create user: %w", err)
-	//}
+	if err := s.userRepo.Create(ctx, user); err != nil {
+		if strings.Contains(err.Error(), "duplicate key error") {
+			s.logger.Error().Err(err).Msg("Username or email already exists")
+			return errors.New("username or email already exists")
+		}
+		s.logger.Error().Err(err).Msg("Failed to create user")
+		return fmt.Errorf("failed to create user: %w", err)
+	}
 
 	if err := s.publishUserEvent(ctx, "user_registered", user); err != nil {
 		s.logger.Error().Err(err).Msg("Failed to publish user registered event")
