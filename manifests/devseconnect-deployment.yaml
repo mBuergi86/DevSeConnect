@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: devseconnect-web-server
-          image: buergi1986/devseconnect-web_server:update
+          image: buergi1986/devseconnect-web_server:0.0.1
           imagePullPolicy: Always
           command: ["/bin/sh", "-c", "sleep infinity"]
           ports:
