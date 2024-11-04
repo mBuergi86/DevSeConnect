@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -116,14 +118,32 @@ func (r *PostgresUserRepository) FindByUsername(ctx context.Context, username st
 
 func (r *PostgresUserRepository) Create(ctx context.Context, user *entity.User) error {
 	tx := r.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	if err := tx.Create(user).Error; err != nil {
 		tx.Rollback()
+
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			return errors.New("user already exists")
+		}
+
 		return err
 	}
+
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
-	return r.cacheUser(user)
+
+	if err := r.cacheUser(user); err != nil {
+		log.Printf("Warning: Failed to cache user data: %v\n", err)
+	}
+
+	return nil
 }
 
 func (r *PostgresUserRepository) Update(ctx context.Context, user *entity.User) error {
