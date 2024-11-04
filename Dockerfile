@@ -1,41 +1,27 @@
-# First stage: Build the Go binary
-FROM golang:1.23.1-alpine AS builder
-
-# Set the working directory inside the container
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-
-# Set the working directory inside the container
+FROM golang:1.23.2-alpine AS builder
+# Set destination for COPY
 WORKDIR /app
 
-# Copy go.mod and go.sum files
+# Download Go modules
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
-# Copy the rest of the application code
+# Copy the source code.
 COPY . .
 
-# Build the Go application
-RUN go build -v -o main ./cmd
+# Build
+RUN CGO_ENABLED=0 GOOS=linux go build -o /main ./cmd/main.go
 
-# Second stage: Create a minimal image for running the Go binary
 FROM alpine:latest
 
-# Install the ca-certificates package to have SSL/TLS certificates
-RUN apk --no-cache add ca-certificates
+# Copy the binary from the builder stage to the final stage.
+COPY --from=builder /main /main
 
-# Set the working directory inside the container
+# Set the work directory
 WORKDIR /app
 
-# Copy the compiled Go binary from the builder stage
-COPY --from=builder /app/main .
-
-# After copying the binary in the second stage
-RUN chmod +x ./main
-
-# Expose the port the application wil run on (default for Echo is 1323)
+# Expose the port the app runs on
 EXPOSE 1323
 
-# Command to run the binary
-CMD ["./main"]
+# Run
+CMD ["/main"]
