@@ -19,7 +19,9 @@ spec:
     spec:
       containers:
         - name: devseconnect-web-server
-          image: buergi1986/devseconnect-web_server:test
+          image: buergi1986/devseconnect-web_server:update
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c", "sleep infinity"]
           ports:
             - containerPort: 1323
           env:
@@ -42,7 +44,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: devseconnect-secret
-                  key: db-password
+                  key: DB-PASSWORD
             - name: DB_NAME
               valueFrom:
                 configMapKeyRef:
@@ -62,7 +64,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: devseconnect-secret
-                  key: redis-password
+                  key: REDIS-PASSWORD
             - name: RABBITMQ_URL
               valueFrom:
                 configMapKeyRef:
@@ -82,12 +84,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: devseconnect-secret
-                  key: rabbitmq-password
+                  key: RABBITMQ-PASSWORD
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: devseconnect-secret
-                  key: jwt-secret
+                  key: JWT-SECRET
 ---
 apiVersion: v1
 kind: Service
