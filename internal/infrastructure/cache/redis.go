@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -13,7 +14,7 @@ func InitRedis() (*redis.Client, error) {
 	redisAddr := strings.TrimPrefix(redisURL, "redis://")
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
-		Password: os.Getenv("REDIS_PASSWORD"),
+		Password: "yb0YjB1qc",
 		DB:       0,
 	})
 
@@ -22,5 +23,6 @@ func InitRedis() (*redis.Client, error) {
 		return nil, err
 	}
 
+	fmt.Printf("Connected to Redis at %s\n", redisAddr)
 	return client, nil
 }
