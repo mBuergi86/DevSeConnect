@@ -69,14 +69,25 @@ func NewConsumer(conn *amqp091.Connection, queueName string) (*Consumer, error) 
 }
 
 func (c *Consumer) handleMessage(handler func([]byte) error, delivery amqp091.Delivery) {
-	if err := handler(delivery.Body); err != nil {
-		c.logger.Error().Err(err).Msg("Failed to handle message")
-		delivery.Nack(false, true)
+	maxRetries := 3
+	retryCount := 0
+
+	for retryCount < maxRetries {
+		if err := handler(delivery.Body); err != nil {
+			retryCount++
+			c.logger.Error().Err(err).Msgf("Failed to handle message, retry %d/%d", retryCount, maxRetries)
+			if retryCount == maxRetries {
+				// Nach Erreichen der Maximalanzahl nicht erneut in die Queue stellen
+				delivery.Nack(false, false)
+				c.logger.Error().Msg("Max retries reached, message moved to DLQ or dropped")
+				return
+			}
+			continue
+		}
+		delivery.Ack(false)
+		c.logger.Info().Msg("Message successfully processed")
 		return
 	}
-
-	delivery.Ack(false)
-	c.logger.Info().Msg("Message successfully processed")
 }
 
 func (c *Consumer) ConsumeMessages(handler func([]byte) error) error {

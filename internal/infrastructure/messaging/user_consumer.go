@@ -31,41 +31,52 @@ func (uc *UserConsumer) Start(ctx context.Context) error {
 }
 
 func (uc *UserConsumer) handleMessage(body []byte) error {
-	if len(body) == 0 {
-		uc.logger.Warn().Msgf("Received empty message body, sending to DLQ: %s", string(body))
-		return fmt.Errorf("received empty message")
-	}
+	maxRetries := 3
+	retries := 0
 
-	var message models.EventMessage
-	if err := json.Unmarshal(body, &message); err != nil {
-		uc.logger.Error().Err(err).Msg("Failed to unmarshal user message")
-		return err
-	}
+	for retries < maxRetries {
+		var message models.EventMessage
+		err := json.Unmarshal(body, &message)
+		if err != nil {
+			retries++
+			uc.logger.Error().Err(err).Msgf("Failed to unmarshal message, attempt %d", retries)
+			if retries == maxRetries {
+				uc.logger.Error().Msg("Max retries reached, moving to DLQ")
+				return fmt.Errorf("failed to process message after %d attempts", maxRetries)
+			}
+			continue
+		}
 
-	if message.Action == "" {
-		uc.logger.Warn().Msg("Empty Action in message, cannot proceed")
-		return fmt.Errorf("message action is empty")
-	}
+		err = uc.processAction(message)
+		if err == nil {
+			return nil
+		}
 
+		retries++
+		if retries == maxRetries {
+			uc.logger.Error().Err(err).Msg("Moving to DLQ after max retries")
+			return fmt.Errorf("message failed after max retries: %w", err)
+		}
+	}
+	return nil
+}
+
+func (uc *UserConsumer) processAction(message models.EventMessage) error {
 	var user entity.User
-	if err := json.Unmarshal(message.Data, &user); err != nil {
-		uc.logger.Error().Err(err).Msg("Failed to unmarshal user data from message")
+	err := json.Unmarshal(message.Data, &user)
+	if err != nil {
 		return err
 	}
-
-	ctx := context.Background()
 
 	switch message.Action {
 	case "user_registered":
-		return uc.handleUserRegistered(ctx, &user)
+		return uc.handleUserRegistered(context.Background(), &user)
 	case "user_updated":
-		return uc.handleUserUpdated(ctx, &user)
+		return uc.handleUserUpdated(context.Background(), &user)
 	case "user_deleted":
-		return uc.handleUserDeleted(ctx, user)
+		return uc.handleUserDeleted(context.Background(), user)
 	default:
-		err := fmt.Errorf("unknown action: %s", message.Action)
-		uc.logger.Error().Err(err).Msg("Unknown action type received")
-		return err
+		return fmt.Errorf("unknown action: %s", message.Action)
 	}
 }
 
