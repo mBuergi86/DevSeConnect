@@ -1,212 +1,99 @@
 <script lang="ts">
-	import logo_light from '$lib/assets/logo.png';
-	import logo_dark from '$lib/assets/logo_transparent.png';
-	import * as Icon from 'svelte-lucide';
+	import logo from '$lib/assets/images/logo.png';
+	interface NavigationLink {
+		url: string;
+		name: string;
+		class?: string;
+	}
 
-	let { children } = $props();
+	let { navigation }: { navigation: NavigationLink[] } = $props();
+	let menuOpen = $state(false);
 
-	let isDark = $state(false);
-	let userToggled = $state(false);
-
-	$effect(() => {
-		if (typeof window !== 'undefined') {
-			const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-			if (!userToggled) {
-				isDark = mediaQuery.matches;
-				applyTheme();
-			}
-
-			mediaQuery.addEventListener('change', (e) => {
-				if (!userToggled) {
-					isDark = e.matches;
-					applyTheme();
-				}
-			});
-		}
-
-		applyTheme();
-	});
-
-	function applyTheme() {
-		if (isDark) {
-			window.document.documentElement.classList.add('dark');
-			localStorage.setItem('theme', 'dark');
-		} else {
-			window.document.documentElement.classList.remove('dark');
-			localStorage.setItem('theme', 'light');
+	function handleOutsieClick(event: MouseEvent) {
+		const menu = document.getElementById('menu');
+		if (menuOpen && !menu?.contains(event.target as Node)) {
+			menuOpen = false;
 		}
 	}
 
-	function toggleTheme() {
-		userToggled = true;
-		isDark = !isDark;
-		applyTheme();
+	$effect(() => {
+		if (menuOpen) {
+			document.addEventListener('click', handleOutsieClick);
+		} else {
+			document.removeEventListener('click', handleOutsieClick);
+		}
+
+		return () => {
+			document.removeEventListener('click', handleOutsieClick);
+		};
+	});
+
+	function menuClose() {
+		menuOpen = false;
 	}
 </script>
 
 <header>
-	<div class="container">
-		{#if isDark}
-			<img src={logo_dark} alt="DevSeConnect Logo Dark" class="logo" />
-		{:else}
-			<img src={logo_light} alt="DevSeConnect Logo Light" class="logo" />
-		{/if}
-		<div class="navigation-right">
-			<nav>
-				<ul>
+	<div class="container mx-auto mt-2 flex h-24 flex-row items-center justify-between px-4 md:px-0">
+		<a href="/" class="flex-shrink-0">
+			<img src={logo} alt="DevSeConnect Logo" class="h-16 w-auto md:h-20" />
+		</a>
+
+		<nav class="hidden md:flex">
+			<ul class="flex flex-row gap-5">
+				{#each navigation as link}
 					<li>
-						<a href="/dashboard">
-							<Icon.House size="40" />
-						</a>
+						<a
+							href={link.url}
+							class="flex h-10 items-center hover:text-[#2563eb] hover:transition-all {link.class}"
+							>{link.name}</a
+						>
 					</li>
-					<li>
-						<a href="/dashboard/projects">
-							<Icon.Box size="40" />
-						</a>
-					</li>
-					<li>
-						<a href="/dashboard/forum">
-							<Icon.MessageSquare size="40" />
-						</a>
-					</li>
-					<li>
-						<a href="/dashboard/chat">
-							<Icon.MessageCircle size="40" />
-						</a>
-					</li>
-					<li>
-						<a href="/dashboard/jobs">
-							<Icon.Briefcase size="40" />
-						</a>
-					</li>
-					<li>
-						<a href="/dashboard/tutorial">
-							<Icon.BookOpen size="40" />
-						</a>
-					</li>
-					<li>
-						<a href="/dashboard/notifications">
-							<Icon.Bell size="40" />
-						</a>
-					</li>
-					<li>
-						<a href="/dashboard/profile">
-							<Icon.User size="40" />
-						</a>
-					</li>
-					<li>
-						<a href="/logout">
-							<Icon.LogOut size="40" />
-						</a>
-					</li>
-				</ul>
-				<div class="toggleButton">
-					<button class="togglebtn" onclick={toggleTheme}>
-						{#if isDark}
-							<Icon.Sun size="40" />
-						{:else}
-							<Icon.Moon size="40" />
-						{/if}
-					</button>
-				</div>
-			</nav>
+				{/each}
+			</ul>
+		</nav>
+
+		<div class="flex md:hidden">
+			<button
+				class="text-gray-700"
+				onclick={(event) => {
+					event.stopPropagation();
+					menuOpen = !menuOpen;
+				}}
+				aria-label="Button"
+			>
+				<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 6h16M4 12h16m-7 6h7"
+					/>
+				</svg>
+			</button>
 		</div>
+
+		{#if menuOpen}
+			<div class="fixed inset-0 z-10 flex items-start justify-end bg-black bg-opacity-50 md:hidden">
+				<nav
+					id="menu"
+					class="mr-4 mt-20 flex h-auto w-full max-w-sm flex-col rounded-lg bg-white p-4 shadow-lg"
+				>
+					<ul class="flex flex-col gap-3">
+						{#each navigation as link}
+							<li>
+								<a
+									href={link.url}
+									class="block bg-white px-4 py-2 text-black {link.class}"
+									onclick={menuClose}
+								>
+									{link.name}
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</nav>
+			</div>
+		{/if}
 	</div>
 </header>
-
-{@render children?.()}
-
-<style>
-	.container {
-		margin: 0 auto;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		max-width: 1600px;
-		height: 100%;
-	}
-
-	.logo {
-		width: auto;
-		height: 65px;
-	}
-
-	.navigation-right {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-
-	nav {
-		display: flex;
-		align-items: center;
-	}
-
-	nav ul {
-		display: flex;
-		gap: 1rem;
-	}
-
-	nav li {
-		list-style: none;
-	}
-
-	nav a {
-		text-decoration: none;
-	}
-
-	:global(.dark) nav a {
-		color: var(--text-color-dark);
-	}
-
-	nav a {
-		color: var(--text-color-light);
-	}
-
-	nav a:hover {
-		color: #2563eb;
-		transform: scale(1.2);
-		transition: all 0.3s ease-in-out;
-	}
-
-	:global(.dark) header {
-		background-color: var(--secondary-color-dark);
-	}
-
-	header {
-		width: 100vw;
-		height: 80px;
-		background-color: var(--secondary-color-light);
-	}
-
-	.toggleButton {
-		margin-left: 0.5rem;
-	}
-
-	.togglebtn {
-		background: transparent;
-		border: none;
-		cursor: pointer;
-	}
-
-	:global(.dark) .togglebtn {
-		color: var(--text-color-dark);
-	}
-
-	:global(.dark) .togglebtn:hover {
-		color: yellow;
-	}
-
-	.togglebtn {
-		color: var(--text-color-light);
-		transform: scale(1.2);
-		transition: all 0.3s ease-in-out;
-	}
-
-	.togglebtn:hover {
-		color: #2563eb;
-		transform: scale(1.2);
-		transition: all 0.3s ease-in-out;
-	}
-</style>

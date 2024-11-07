@@ -3,55 +3,40 @@
 	let _class = $state(className);
 </script>
 
-<footer class={_class}>
-	<div class="container">
-		<p>© 2021 DevSeConnect. All rights reserved.</p>
+<footer class="mt-auto flex min-h-20 w-full items-center bg-[#1F2937] {_class}">
+	<div
+		class="container mx-auto flex h-full flex-col items-center justify-center gap-3 p-4 md:flex-row md:justify-between"
+	>
+		<p class="text-center text-black dark:text-white {_class}">
+			© 2024 DevSeConnect. All rights reserved.
+		</p>
 		<nav>
-			<a href="/aboutme">About Me</a>
-			<span>|</span>
-			<a href="/privacy">Privacy Policy</a>
-			<span>|</span>
-			<a href="/terms">Terms of Service</a>
-			<span>|</span>
-			<a href="/contact">Contact</a>
+			<ul class="flex flex-col items-center gap-2 md:flex-row md:gap-5">
+				<li>
+					<a
+						href="/about"
+						class="text-black hover:text-[#2563eb] hover:transition-colors dark:text-white {_class}"
+					>
+						About me
+					</a>
+				</li>
+				<li>
+					<a
+						href="/privacy"
+						class="text-black hover:text-[#2563eb] hover:transition-colors dark:text-white {_class}"
+					>
+						Privacy Policy
+					</a>
+				</li>
+				<li>
+					<a
+						href="/terms"
+						class="text-black hover:text-[#2563eb] hover:transition-colors dark:text-white {_class}"
+					>
+						Terms of Service
+					</a>
+				</li>
+			</ul>
 		</nav>
 	</div>
 </footer>
-
-<style lang="postcss">
-	.footer {
-		font-size: clamp(0.875rem, 0.7917rem + 0.3333vw, 1.125rem);
-	}
-
-	:global(.dark) .footer,
-	:global(.dark) .footer a {
-		background-color: var(--secondary-color-dark) !important;
-		color: var(--text-color-dark) !important;
-	}
-
-	.footer,
-	.footer a {
-		background-color: var(--secondary-color-light) !important;
-		color: var(--text-color-light) !important;
-	}
-
-	.container {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		max-width: 1600px;
-		margin: 0 auto;
-		height: 80px;
-	}
-
-	a {
-		width: 100vw;
-		text-decoration: none;
-		margin-left: 0.5rem;
-		margin-right: 0.5rem;
-	}
-
-	a:hover {
-		text-decoration: underline;
-	}
-</style>
