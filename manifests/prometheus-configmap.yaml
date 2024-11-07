@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-additional-scrape-configs
+  namespace: monitoring
+data:
+  additional-scrape-configs.yaml: |
+    - job_name: 'argocd'
+      scrape_interval: 5s
+      static_configs:
+        - targets: ['argocd-metrics.argocd.svc.cluster.local:8082']
