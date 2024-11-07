@@ -45,16 +45,16 @@ services:
     networks:
       - backend
 
-  # postgres-exporter:
-  #   image: wrouesnel/postgres_exporter:latest
-  #   environment:
-  #     DATA_SOURCE_NAME: ${DATA_SOURCE_NAME}
-  #   depends_on:
-  #     - postgres
-  #   ports:
-  #     - "9187:9187"
-  #   networks:
-  #     - backend
+  postgres-exporter:
+    image: wrouesnel/postgres_exporter:latest
+    environment:
+      DATA_SOURCE_NAME: ${DATA_SOURCE_NAME}
+    depends_on:
+      - postgres
+    ports:
+      - "9187:9187"
+    networks:
+      - backend
 
   redis:
     image: redis:latest
@@ -67,15 +67,15 @@ services:
     networks:
       - backend
 
-  # redis-exporter:
-  #   image: oliver006/redis_exporter:latest
-  #   command: --redis.addr=redis:6379
-  #   depends_on:
-  #     - redis
-  #   ports:
-  #     - "9121:9121"
-  #   networks:
-  #     - backend
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    command: --redis.addr=redis:6379
+    depends_on:
+      - redis
+    ports:
+      - "9121:9121"
+    networks:
+      - backend
 
   rabbitmq:
     image: rabbitmq:management
@@ -91,34 +91,34 @@ services:
     networks:
       - backend
 
-  # rabbitmq-exporter:
-  #   image: kbudde/rabbitmq-exporter:latest
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - rabbitmq
-  #   ports:
-  #     - "9419:9419"
-  #   networks:
-  #     - backend
-  #   healthcheck:
-  #     disable: true
+  rabbitmq-exporter:
+    image: kbudde/rabbitmq-exporter:latest
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+    ports:
+      - "9419:9419"
+    networks:
+      - backend
+    healthcheck:
+      disable: true
 
-  # nginx:
-  #   image: nginx:latest
-  #   container_name: nginx
-  #   build: ./nginx/
-  #   restart: always
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - nginx-config:/etc/nginx
-  #   depends_on:
-  #     - web_server
-  #     - frontend_web
-  #   networks:
-  #     - backend
+  #nginx:
+  #  image: nginx:latest
+  #  container_name: nginx
+  #  build: ./nginx/
+  #  restart: always
+  #  ports:
+  #    - "80:80"
+  #    - "443:443"
+  #  volumes:
+  #    - nginx-config:/etc/nginx
+  #  depends_on:
+  #    - web_server
+  #    - frontend_web
+  #  networks:
+  #    - backend
 
   jenkins:
     image: jenkins/jenkins:lts
@@ -161,59 +161,53 @@ services:
     networks:
       - jenkins_network
 
-  #web_server:
-  #  build:
-  #    context: .
-  #    dockerfile: Dockerfile
-  #  env_file:
-  #    - .env
-  #  container_name: golang_web_server
-  #  restart: always
-  #  ports:
-  #    - "1323:1323"
-  #  depends_on:
-  #    - postgres
-  #    - redis
-  #    - rabbitmq
-  #  networks:
-  #    - backend
-  #    - frontend
+  web_server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    container_name: golang_web_server
+    restart: always
+    ports:
+      - "1323:1323"
+    networks:
+      - backend
+      - frontend
 
-  #frontend_web:
-  #  build:
-  #    context: ./web/devseconnect/
-  #    dockerfile: Dockerfile
-  #  environment:
-  #    - ORIGIN=http://localhost:3000
-  #  container_name: svelte_web
-  #  restart: always
-  #  ports:
-  #    - "4000:3000"
-  #  networks:
-  #    - frontend
-  #    - backend
+  frontend_web:
+    build:
+      context: ./web/devseconnect/
+      dockerfile: Dockerfile
+    container_name: svelte_web
+    restart: always
+    ports:
+      - "4000:4000"
+    networks:
+      - frontend
+      - backend
 
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   volumes:
-  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
-  #   restart: always
-  #   ports:
-  #     - "9090:9090"
-  #   networks:
-  #     - backend
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: always
+    ports:
+      - "9090:9090"
+    networks:
+      - backend
 
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   restart: always
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - grafana-data:/var/lib/grafana
-  #   depends_on:
-  #     - prometheus
-  #   networks:
-  #     - backend
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - backend
 
 volumes:
   postgres-data:
@@ -222,12 +216,12 @@ volumes:
     name: redis-data
   rabbitmq-data:
     name: rabbitmq-data
-  # nginx-config:
-  #   name: nginx-config
+  #nginx-config:
+  #  name: nginx-config
   pgadmin-data:
     name: pgadmin-data
-  # grafana-data:
-  #   name: grafana-data
+  grafana-data:
+    name: grafana-data
   jenkins_home:
     name: jenkins_home
     external: false
@@ -239,8 +233,8 @@ volumes:
     name: sonar_logs
   sonarqube-db-data:
     name: sonarqube-db-data
-  # prometheus.yml:
-  #   name: prometheus.yml
+  prometheus.yml:
+    name: prometheus.yml
 
 networks:
   frontend:

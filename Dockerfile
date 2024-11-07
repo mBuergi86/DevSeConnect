@@ -23,5 +23,8 @@ WORKDIR /app
 # Expose the port the app runs on
 EXPOSE 1323
 
+# Copy .env file
+COPY .env .env
+
 # Run
 CMD ["/main"]
