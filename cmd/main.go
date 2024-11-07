@@ -23,17 +23,9 @@ var logger zerolog.Logger
 func main() {
 	logger.Info().Msg("Starting server...")
 	fmt.Println("Starting server...")
-	if _, err := os.Stat(".env"); err == nil { // Datei existiert
-		if err := godotenv.Load(); err != nil {
-			fmt.Println("Error loading .env file")
-			logger.Fatal().Err(err).Msg("Error loading .env file")
-		}
-	} else if os.IsNotExist(err) {
-		fmt.Println("No .env file found, skipping load")
-		logger.Info().Msg("No .env file found, skipping load")
-	} else {
-		fmt.Println("Error checking .env file existence")
-		logger.Fatal().Err(err).Msg("Error checking .env file existence")
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("Error loading .env file")
+		logger.Fatal().Err(err).Msg("Error loading .env file")
 	}
 
 	// Initialize PostgreSQL

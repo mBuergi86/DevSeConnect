@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rs/zerolog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+var logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 func InitPostgres() (*gorm.DB, error) {
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
@@ -17,11 +20,14 @@ func InitPostgres() (*gorm.DB, error) {
 		os.Getenv("DB_NAME"),
 	)
 
+	logger.Debug().Msgf("DSN: %s", dsn)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
+	logger.Info().Msg("Connecting to PostgreSQL")
 	// Auto Migrate your models here
 	// db.AutoMigrate(&entity.User{})
 
