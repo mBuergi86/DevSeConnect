@@ -30,8 +30,8 @@ pipeline {
                         ${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=devseconnect \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://sonarqube:9000 \
-                        -Dsonar.login=sqp_173cd2445358301887311d9f0825f2d8f8ff7671
+                        -Dsonar.host.url=http://sonarqube:9091 \
+                        -Dsonar.login=sqp_0b389f1b7f3cc772ab207a90601b801d96493346
                         """
                     }
                 }
