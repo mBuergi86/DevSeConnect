@@ -22,20 +22,10 @@ pipeline {
         }
         
         stage('🔍 SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
-                    withSonarQubeEnv(credentialsId: 'sonarqube_token', installationName: 'sonar') {
-                        sh """
-                        ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=devseconnect \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                        -Dsonar.login=sqp_0b389f1b7f3cc772ab207a90601b801d96493346
-                        """
-                    }
-                }
-            }
+          def scannerHome = tool 'SonarScanner';
+          withSonarQubeEnv() {
+            sh "${scannerHome}/bin/sonar-scanner"
+          }
         }
         
         stage('🐳 Build Docker Image') {
