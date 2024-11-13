@@ -25,12 +25,12 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'sonarqube'
-                    withSonarQubeEnv(credentialsId: 'b72ae151-1f76-4b62-adf9-694aa0eeaab9', installationName: 'sonar') {
+                    withSonarQubeEnv(credentialsId: 'sonarqube_token', installationName: 'sonar') {
                         sh """
                         ${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=devseconnect \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://sonarqube:9091 \
+                        -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
                         -Dsonar.login=sqp_0b389f1b7f3cc772ab207a90601b801d96493346
                         """
                     }
