@@ -5,7 +5,7 @@ import { URL_API } from '$env/static/private';
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	await parent();
 	if (locals.token) {
-		redirect(302, '/dashboard');
+		throw redirect(301, '/dashboard');
 	}
 	return {};
 };
@@ -30,18 +30,38 @@ export const actions: Actions = {
 			!password ||
 			!confirmPassword
 		) {
+			console.error('Validation failed: Missing fields');
+			console.info(
+				'first_name:',
+				first_name,
+				'last_name:',
+				last_name,
+				'username:',
+				username,
+				'email:',
+				email,
+				'confirmEmail:',
+				confirmEmail,
+				'password:',
+				password,
+				'confirmPassword:',
+				confirmPassword
+			);
 			return fail(400, { message: 'All fields are required.' });
 		}
 
 		if (email !== confirmEmail) {
+			console.error('Validation failed: Emails do not match');
 			return fail(400, { message: 'Emails do not match.' });
 		}
 
 		if (password !== confirmPassword) {
+			console.error('Validation failed: Passwords do not match');
 			return fail(400, { message: 'Passwords do not match.' });
 		}
 
 		try {
+			console.info('Sending data to API...');
 			const response = await fetch(`http://${URL_API}:1323/register`, {
 				method: 'POST',
 				headers: {
@@ -57,12 +77,15 @@ export const actions: Actions = {
 			});
 
 			if (response.ok) {
-				redirect(302, '/login');
+				console.info('Registration successful');
+				throw redirect(307, '/login');
 			} else {
 				const errorData = await response.json();
+				console.error('API Error:', errorData.message);
 				return fail(response.status, { message: errorData.message || 'Registration failed' });
 			}
 		} catch (error) {
+			console.error('Unexpected server error', error);
 			return fail(500, { message: 'Unexpected server error', error });
 		}
 	}
