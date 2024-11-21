@@ -30,8 +30,13 @@ type UserService struct {
 }
 
 type jwtCustomClaims struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
+	UserID          string `json:"user_id"`
+	Username        string `json:"username"`
+	Firstname       string `json:"first_name"`
+	Lastname        string `json:"last_name"`
+	Email           string `json:"email"`
+	Bio             string `json:"bio"`
+	Profile_Picture string `json:"profile_picture"`
 	jwt.RegisteredClaims
 }
 
@@ -110,8 +115,13 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 	}
 
 	claims := &jwtCustomClaims{
-		UserID:   user.UserID.String(),
-		Username: user.Username,
+		UserID:          user.UserID.String(),
+		Username:        user.Username,
+		Firstname:       user.FirstName,
+		Lastname:        user.LastName,
+		Email:           user.Email,
+		Bio:             user.Bio,
+		Profile_Picture: user.ProfilePicture,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

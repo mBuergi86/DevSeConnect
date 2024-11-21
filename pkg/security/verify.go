@@ -10,9 +10,14 @@ import (
 )
 
 type jwtCustomClaims struct {
-	UserID    string          `json:"user_id"`
-	Username  string          `json:"username"`
-	ExpiresAt jwt.NumericDate `json:"exp"`
+	UserID          string          `json:"user_id"`
+	Username        string          `json:"username"`
+	Firstname       string          `json:"first_name"`
+	Lastname        string          `json:"last_name"`
+	Email           string          `json:"email"`
+	Bio             string          `json:"bio"`
+	Profile_Picture string          `json:"profile_picture"`
+	ExpiresAt       jwt.NumericDate `json:"exp"`
 	jwt.RegisteredClaims
 }
 
