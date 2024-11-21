@@ -2,12 +2,11 @@ import { redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { URL_API, VITE_DEV_DOMAIN, VITE_PROD_DOMAIN } from '$env/static/private';
-import { goto } from '$app/navigation';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// redirect user if logged in
 	if (locals.token) {
-		return redirect(302, '/dashboard');
+		return redirect(301, '/dashboard');
 	}
 };
 
@@ -39,7 +38,7 @@ export const actions: Actions = {
 					secure: !import.meta.env.DEV,
 					domain
 				});
-				goto('/dashboard', { replaceState: true });
+				return redirect(308, '/dashboard');
 			} else {
 				return fail(422, {
 					message: data.message
