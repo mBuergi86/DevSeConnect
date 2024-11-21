@@ -48,8 +48,16 @@
 		{/if}
 
 		{#if confirmEmail}
-			<label for="email" class="block font-semibold text-white">{@render confirmEmail()}</label>
-			<input type="email" id="email" name="email" required class="w-full rounded-md p-2" />
+			<label for="confirmEmail" class="block font-semibold text-white"
+				>{@render confirmEmail()}</label
+			>
+			<input
+				type="email"
+				id="confirmEmail"
+				name="confirmEmail"
+				required
+				class="w-full rounded-md p-2"
+			/>
 		{/if}
 
 		{#if password}
