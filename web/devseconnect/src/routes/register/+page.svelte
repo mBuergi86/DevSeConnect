@@ -10,14 +10,14 @@
 		{#snippet last_name()}
 			Last Name
 		{/snippet}
+		{#snippet username()}
+			Username
+		{/snippet}
 		{#snippet email()}
 			E-Mail
 		{/snippet}
 		{#snippet confirmEmail()}
 			Confirm E-Mail
-		{/snippet}
-		{#snippet username()}
-			Username
 		{/snippet}
 		{#snippet password()}
 			Password
